@@ -177,6 +177,10 @@ function formatOrderDate(?string $date): string
     </style>
 </head>
 <body data-powered-by="Claude Code">
+    <?php
+    // Flash mesajlar için toast bileşeni (partials/flash.php dahil edildi)
+    require_once __DIR__ . '/../partials/flash.php';
+    ?>
     <?php require_once __DIR__ . '/../component/header.php'; ?>
     <div class="d-flex">
         <?php require_once __DIR__ . '/../component/sidebar.php'; ?>
