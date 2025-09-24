@@ -182,7 +182,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .sidebar-header {
-        padding: 2rem 1.5rem 1.5rem;
+        padding: 1.5rem 1.25rem 1.25rem;
         border-bottom: 1px solid var(--border);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
         position: relative;
@@ -225,11 +225,11 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .sidebar-content {
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
 
     .nav-group {
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
 
     .nav-group:last-child {
@@ -242,8 +242,8 @@ $renderMenu = static function (array $menuItems, string $active): string {
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--ink-lightest);
-        margin-bottom: 1rem;
-        padding: 0 1rem;
+        margin-bottom: 0.75rem;
+        padding: 0 0.85rem;
         position: relative;
     }
 
@@ -258,13 +258,13 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .nav-item {
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
 
     .nav-link {
         color: var(--ink-lighter);
         border-radius: var(--radius);
-        padding: 1rem;
+        padding: 0.75rem;
         transition: var(--transition);
         text-decoration: none;
         font-weight: 500;
@@ -315,7 +315,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
 
     .nav-indicator {
         position: absolute;
-        right: 1rem;
+        right: 0.85rem;
         top: 50%;
         transform: translateY(-50%);
         width: 6px;
@@ -331,7 +331,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .nav-icon {
-        font-size: 1.125rem;
+        font-size: 1rem;
         transition: var(--transition);
         flex-shrink: 0;
     }
@@ -341,7 +341,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .sidebar-footer {
-        padding: 1.5rem;
+        padding: 1.25rem;
         border-top: 1px solid var(--border);
         margin-top: auto;
         background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
@@ -351,7 +351,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
         background: linear-gradient(135deg, var(--danger), #dc2626);
         border: none;
         border-radius: var(--radius);
-        padding: 0.875rem 1.5rem;
+        padding: 0.75rem 1.25rem;
         font-weight: 600;
         font-size: 0.875rem;
         color: white;
@@ -404,7 +404,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
         background: linear-gradient(135deg, var(--surface), var(--surface-hover));
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 0.75rem;
+        padding: 0.65rem;
         transition: var(--transition);
         color: var(--ink-lighter);
     }
@@ -425,7 +425,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
     .offcanvas-header {
         border-bottom: 1px solid var(--border);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-        padding: 2rem 1.5rem 1.5rem;
+        padding: 1.5rem 1.25rem 1.25rem;
     }
 
     .btn-close {
@@ -475,7 +475,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
 
 <!-- Mobile Header -->
 <div class="d-lg-none mobile-header">
-    <div class="container-fluid px-3 py-3">
+    <div class="container-fluid px-3 py-2">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <span class="sidebar-logo">NEXA</span>
