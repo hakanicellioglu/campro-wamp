@@ -1,5 +1,5 @@
 <?php
-// dashboard.php (minimal, bootstrap grid, login/register ile tutarlı stil)
+// dashboard.php — header.php + sidebar.php dahil edilerek yapılandırıldı
 declare(strict_types=1);
 
 session_start();
@@ -11,52 +11,7 @@ if (empty($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../config.php';
 
-if (!function_exists('ensureCsrfToken')) {
-    function ensureCsrfToken(): void
-    {
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
-    }
-}
-
-if (!function_exists('verifyCsrfToken')) {
-    function verifyCsrfToken(string $tokenFromPost): bool
-    {
-        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $tokenFromPost);
-    }
-}
-
-ensureCsrfToken();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
-    $tokenFromPost = $_POST['csrf_token'] ?? '';
-    if (!verifyCsrfToken((string) $tokenFromPost)) {
-        $_SESSION['flash_error'] = 'Oturum doğrulaması başarısız. Lütfen tekrar deneyin.';
-        header('Location: dashboard.php');
-        exit;
-    }
-
-    $sessionName = session_name();
-    session_unset();
-    session_destroy();
-
-    if (isset($_COOKIE[$sessionName])) {
-        setcookie($sessionName, '', time() - 3600, '/', '', false, true);
-    }
-    if (isset($_COOKIE['remember_user'])) {
-        setcookie('remember_user', '', time() - 3600, '/', '', false, true);
-    }
-
-    session_start();
-    session_regenerate_id(true);
-    $_SESSION['flash_success'] = 'Güvenli çıkış yapıldı.';
-
-    header('Location: auth/login.php');
-    exit;
-}
-
-$userId   = (int) ($_SESSION['user_id'] ?? 0);
+$userId = (int) ($_SESSION['user_id'] ?? 0);
 $username = 'Kullanıcı';
 
 try {
@@ -137,83 +92,29 @@ function formatOrderDate(?string $date): string
 ?>
 <!doctype html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nexa — Yönetim Paneli</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <?php require_once __DIR__ . '/../assets/fonts/monoton.php'; ?>
-    <!-- Claude Code enhanced dashboard using Bootstrap -->
     <style>
-        :root {
-            --ink: #0f1419;
-            --muted: #536471;
-            --line: #e6e6e6;
-            --radius: 14px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            color: var(--ink);
             background-color: #f8f9fb;
         }
 
-        .top-bar {
-            border-bottom: 1px solid var(--line);
-            background-color: #ffffff;
-        }
-
-        .brand-mark {
-            font-family: 'Monoton', cursive;
-            letter-spacing: 0.25rem;
-            font-size: 1.4rem;
-            color: var(--ink);
-        }
-
-        .sidebar {
-            min-width: 240px;
-            max-width: 240px;
-            border-right: 1px solid var(--line);
-            background-color: #ffffff;
-        }
-
-        .sidebar .nav-link {
-            border-radius: var(--radius);
-            color: var(--muted);
-        }
-
-        .sidebar .nav-link.active,
-        .sidebar .nav-link:hover {
-            color: var(--ink);
-            background-color: rgba(15, 20, 25, 0.05);
-        }
-
-        .sidebar.offcanvas-lg {
-            height: 100vh;
-        }
-
-        @media (min-width: 992px) {
-            .sidebar.offcanvas-lg {
-                display: flex !important;
-                position: static;
-                transform: none;
-                visibility: visible !important;
-                box-shadow: none;
-            }
+        main.main-with-sidebar {
+            min-height: 100vh;
         }
 
         .stat-card {
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
+            border: 1px solid #e6e6e6;
+            border-radius: 14px;
             background-color: #ffffff;
             padding: 1.5rem;
             height: 100%;
@@ -228,7 +129,7 @@ function formatOrderDate(?string $date): string
             align-items: center;
             justify-content: center;
             font-size: 1.25rem;
-            color: var(--ink);
+            color: #0f1419;
         }
 
         .stat-card .stat-number {
@@ -238,8 +139,8 @@ function formatOrderDate(?string $date): string
 
         .table-card,
         .aside-card {
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
+            border: 1px solid #e6e6e6;
+            border-radius: 14px;
             background-color: #ffffff;
         }
 
@@ -248,7 +149,7 @@ function formatOrderDate(?string $date): string
         }
 
         .table thead th {
-            color: var(--muted);
+            color: #536471;
             font-weight: 500;
             text-transform: uppercase;
             font-size: 0.75rem;
@@ -257,7 +158,7 @@ function formatOrderDate(?string $date): string
 
         .activity-list .list-group-item {
             border: none;
-            border-bottom: 1px solid var(--line);
+            border-bottom: 1px solid #e6e6e6;
         }
 
         .activity-list .list-group-item:last-child {
@@ -265,70 +166,32 @@ function formatOrderDate(?string $date): string
         }
 
         .quick-actions .btn {
-            border-radius: var(--radius);
+            border-radius: 14px;
         }
 
-        @media (max-width: 991.98px) {
-            .sidebar {
-                max-width: 100%;
-                min-width: unset;
+        @media (min-width: 992px) {
+            main.main-with-sidebar {
+                margin-left: 280px;
             }
         }
     </style>
 </head>
-
-<body>
-    <header class="top-bar">
-        <div class="container-fluid py-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <button class="btn btn-outline-secondary d-lg-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Menüyü aç">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <span class="brand-mark">NEXA</span>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted">Hoş geldin, <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <form method="post" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                        <button type="submit" name="logout" value="1" class="btn btn-sm btn-outline-danger">
-                            Çıkış
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </header>
-
+<body data-powered-by="Claude Code">
+    <?php require_once __DIR__ . '/../component/header.php'; ?>
     <div class="d-flex">
-        <div class="offcanvas offcanvas-start offcanvas-lg sidebar" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" data-bs-scroll="true" data-bs-backdrop="false">
-            <div class="offcanvas-header d-lg-none">
-                <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">NEXA Menü</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Kapat"></button>
-            </div>
-            <div class="offcanvas-body d-flex flex-column gap-2 p-3">
-                <nav class="nav flex-column">
-                    <a class="nav-link active" href="dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-                    <a class="nav-link" href="orders.php"><i class="bi bi-bag-check me-2"></i>Siparişler</a>
-                    <a class="nav-link" href="product.php"><i class="bi bi-box-seam me-2"></i>Ürünler</a>
-                    <a class="nav-link" href="price.php"><i class="bi bi-cash-stack me-2"></i>Fiyatlar</a>
-                    <a class="nav-link" href="supplier.php"><i class="bi bi-people me-2"></i>Tedarikçiler</a>
-                    <a class="nav-link" href="settings.php"><i class="bi bi-gear me-2"></i>Ayarlar</a>
-                </nav>
-            </div>
-        </div>
-
-        <main class="flex-grow-1">
-            <div class="container-fluid py-4">
-                <?php if (file_exists(__DIR__ . '/../partials/flash.php')): ?>
-                    <div class="mb-3">
-                        <?php require __DIR__ . '/../partials/flash.php'; ?>
+        <?php require_once __DIR__ . '/../component/sidebar.php'; ?>
+        <main class="main-with-sidebar flex-grow-1 p-4">
+            <div class="container-fluid">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">Merhaba, <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></h1>
+                        <p class="text-muted mb-0">Operasyonunuzun güncel durumunu aşağıdan takip edin.</p>
                     </div>
-                <?php endif; ?>
+                </div>
 
                 <div class="row g-4">
                     <div class="col-12 col-md-6 col-xl-3">
-                        <div class="stat-card">
+                        <div class="stat-card" data-powered-by="Claude Code">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h6 class="text-uppercase text-muted mb-1">Toplam Sipariş</h6>
@@ -342,7 +205,7 @@ function formatOrderDate(?string $date): string
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3">
-                        <div class="stat-card">
+                        <div class="stat-card" data-powered-by="Claude Code">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h6 class="text-uppercase text-muted mb-1">Bekleyen Sipariş</h6>
@@ -356,7 +219,7 @@ function formatOrderDate(?string $date): string
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3">
-                        <div class="stat-card">
+                        <div class="stat-card" data-powered-by="Claude Code">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h6 class="text-uppercase text-muted mb-1">Bugün Sevk</h6>
@@ -370,7 +233,7 @@ function formatOrderDate(?string $date): string
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3">
-                        <div class="stat-card">
+                        <div class="stat-card" data-powered-by="Claude Code">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h6 class="text-uppercase text-muted mb-1">Güncel Fiyat Kalemi</h6>
@@ -387,7 +250,7 @@ function formatOrderDate(?string $date): string
 
                 <div class="row g-4 mt-1">
                     <div class="col-12 col-xl-8">
-                        <div class="table-card p-3 p-md-4">
+                        <div class="table-card p-3 p-md-4" data-powered-by="Claude Code">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h5 class="mb-0">Son Siparişler</h5>
                                 <a class="btn btn-sm btn-outline-primary" href="orders.php">Tümü</a>
@@ -411,7 +274,9 @@ function formatOrderDate(?string $date): string
                                                 $orderId = isset($order['id']) ? (int) $order['id'] : 0;
                                                 $customerName = htmlspecialchars((string) ($order['customer_name'] ?? 'Belirsiz'), ENT_QUOTES, 'UTF-8');
                                                 $status = htmlspecialchars((string) ($order['status'] ?? 'bilinmiyor'), ENT_QUOTES, 'UTF-8');
-                                                $amount = isset($order['total_amount']) ? number_format((float) $order['total_amount'], 2, ',', '.') . ' ₺' : '-';
+                                                $amount = isset($order['total_amount'])
+                                                    ? number_format((float) $order['total_amount'], 2, ',', '.') . ' ₺'
+                                                    : '-';
                                                 ?>
                                                 <tr>
                                                     <th scope="row">#<?= htmlspecialchars((string) $orderId, ENT_QUOTES, 'UTF-8'); ?></th>
@@ -439,14 +304,14 @@ function formatOrderDate(?string $date): string
                         </div>
                     </div>
                     <div class="col-12 col-xl-4">
-                        <div class="aside-card p-3 p-md-4 mb-4">
+                        <div class="aside-card p-3 p-md-4 mb-4" data-powered-by="Claude Code">
                             <h6 class="text-uppercase text-muted mb-3">Aktivite Akışı</h6>
                             <div class="list-group list-group-flush activity-list">
                                 <?php if (!empty($activityFeed)): ?>
                                     <?php foreach ($activityFeed as $activity): ?>
                                         <div class="list-group-item d-flex align-items-center">
                                             <div class="me-3 text-primary">
-                                                <i class="bi <?= htmlspecialchars($activity['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
+                                                <i class="bi <?= htmlspecialchars($activity['icon'], ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i>
                                             </div>
                                             <div>
                                                 <div class="fw-semibold"><?= htmlspecialchars($activity['text'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -459,7 +324,7 @@ function formatOrderDate(?string $date): string
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <div class="aside-card p-3 p-md-4 quick-actions">
+                        <div class="aside-card p-3 p-md-4 quick-actions" data-powered-by="Claude Code">
                             <h6 class="text-uppercase text-muted mb-3">Hızlı İşlemler</h6>
                             <div class="d-grid gap-2">
                                 <a class="btn btn-primary" href="orders/add.php">Yeni Sipariş Oluştur</a>
@@ -475,5 +340,4 @@ function formatOrderDate(?string $date): string
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
