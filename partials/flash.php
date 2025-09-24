@@ -1,47 +1,53 @@
-<style>
-    .custom-alert {
-        border-radius: 0.75rem;
-        font-size: 0.95rem;
-        padding: 0.75rem 1rem;
-    }
-
-    .custom-alert i {
-        font-size: 1.2rem;
-    }
-</style>
 <?php
+// partials/flash.php — session flash mesajlarını toast olarak gösterir
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$flashMessages = [
-    'flash_success' => 'success',
-    'flash_error'   => 'danger',
-    'flash_warning' => 'warning',
+$flashTypes = [
+    'flash_success' => ['class' => 'success', 'icon' => 'check-circle-fill'],
+    'flash_error'   => ['class' => 'danger',  'icon' => 'exclamation-triangle-fill'],
+    'flash_warning' => ['class' => 'warning', 'icon' => 'exclamation-circle-fill'],
 ];
 
-foreach ($flashMessages as $sessionKey => $alertType) {
-    if (!empty($_SESSION[$sessionKey])) {
-        $message = $_SESSION[$sessionKey];
-        unset($_SESSION[$sessionKey]);
-?>
-        <div class="custom-alert alert alert-<?php echo $alertType; ?> alert-dismissible fade show shadow-sm border-0 mb-3" role="alert">
-            <div class="d-flex align-items-center">
-                <!-- İkon -->
-                <?php if ($alertType === 'success'): ?>
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                <?php elseif ($alertType === 'danger'): ?>
-                    <i class="bi bi-x-circle-fill me-2"></i>
-                <?php elseif ($alertType === 'warning'): ?>
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <?php endif; ?>
-
-                <!-- Mesaj -->
-                <span><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-<?php
+$hasFlash = false;
+foreach ($flashTypes as $key => $meta) {
+    if (!empty($_SESSION[$key])) {
+        $hasFlash = true;
+        break;
     }
 }
 ?>
+
+<?php if ($hasFlash): ?>
+<!-- Bootstrap Icons CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+  <?php foreach ($flashTypes as $key => $meta): ?>
+    <?php if (!empty($_SESSION[$key])): ?>
+      <div class="toast align-items-center text-bg-<?= $meta['class'] ?> border-0 mb-2" role="alert"
+           aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="bi bi-<?= $meta['icon'] ?> me-2"></i>
+            <?= htmlspecialchars($_SESSION[$key], ENT_QUOTES, 'UTF-8') ?>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                  data-bs-dismiss="toast" aria-label="Kapat"></button>
+        </div>
+      </div>
+      <?php unset($_SESSION[$key]); ?>
+    <?php endif; ?>
+  <?php endforeach; ?>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.toast').forEach(toastEl => {
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    });
+  });
+</script>
+<?php endif; ?>
