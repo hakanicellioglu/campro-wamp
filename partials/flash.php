@@ -23,7 +23,7 @@ foreach ($flashTypes as $key => $meta) {
 <!-- Bootstrap Icons CDN -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:3000;">
   <?php foreach ($flashTypes as $key => $meta): ?>
     <?php if (!empty($_SESSION[$key])): ?>
       <div class="toast align-items-center text-bg-<?= $meta['class'] ?> border-0 mb-2" role="alert"
@@ -44,9 +44,8 @@ foreach ($flashTypes as $key => $meta) {
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.toast').forEach(toastEl => {
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
+    document.querySelectorAll('.toast').forEach(el => {
+      new bootstrap.Toast(el, { autohide: true, delay: 3000 }).show();
     });
   });
 </script>

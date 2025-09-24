@@ -89,6 +89,10 @@ function formatOrderDate(?string $date): string
         return htmlspecialchars((string) $date, ENT_QUOTES, 'UTF-8');
     }
 }
+
+if (!empty($_GET['flash'])) {
+    $_SESSION['flash_success'] = 'Toast test mesajı 🎉';
+}
 ?>
 <!doctype html>
 <html lang="tr">
