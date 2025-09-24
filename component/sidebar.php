@@ -270,7 +270,12 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         overflow-y: auto;
         overflow-x: hidden;
         padding-bottom: 1rem;
-        transition: width 0.3s ease, padding 0.3s ease;
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.3s ease,
+                    padding 0.3s ease;
     }
 
     .sidebar-header {
@@ -569,29 +574,13 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     .main-with-sidebar {
         margin-left: 292px;
         min-height: 100vh;
-        transition: margin-left 0.3s ease;
+        transition: margin-left 0.35s ease;
     }
 
     #sidebar.collapsed {
-        width: 84px;
-        padding-bottom: 0.75rem;
-    }
-
-    #sidebar.collapsed .sidebar-header,
-    #sidebar.collapsed .sidebar-content,
-    #sidebar.collapsed .sidebar-footer {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-
-    #sidebar.collapsed .sidebar-logo,
-    #sidebar.collapsed .sidebar-subtitle,
-    #sidebar.collapsed .nav-text,
-    #sidebar.collapsed .nav-group-title,
-    #sidebar.collapsed .btn-logout span {
+        transform: translateX(calc(-100% - 32px));
         opacity: 0;
         pointer-events: none;
-        visibility: hidden;
     }
 
     #sidebar.collapsed .submenu-list {
@@ -600,22 +589,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         margin: 0;
     }
 
-    #sidebar.collapsed .nav-link {
-        justify-content: center;
-        padding: 0.75rem;
-    }
-
-    #sidebar.collapsed .nav-icon {
-        margin: 0;
-    }
-
-    #sidebar.collapsed .btn-logout {
-        justify-content: center;
-        padding: 0.75rem;
-    }
-
     body.sidebar-collapsed .main-with-sidebar {
-        margin-left: 116px;
+        margin-left: 72px;
     }
 
     .sidebar-collapse-toggle {
@@ -643,16 +618,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     body.sidebar-collapsed .sidebar-collapse-toggle {
-        left: calc(16px + 84px - 18px);
-    }
-
-    body.sidebar-collapsed #sidebar {
-        width: 84px;
-    }
-
-    body.sidebar-collapsed #sidebar .nav-item.has-children .submenu-toggle,
-    body.sidebar-collapsed #sidebar .nav-indicator {
-        display: none;
+        left: 16px;
     }
 
     /* Mobile Header */
@@ -784,6 +750,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         sidebar.classList.toggle('collapsed', collapsed);
         document.body.classList.toggle('sidebar-collapsed', collapsed);
+        sidebar.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
 
         if (collapseToggle) {
             collapseToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
