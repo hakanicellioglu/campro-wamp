@@ -105,7 +105,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 $renderMenu = static function (array $menuItems, string $active): string {
     $html = '';
-    foreach ($menuItems as $item) {
+    foreach ($menuItems as $index => $item) {
         $isActive = $active === ($item['match'] ?? '');
         $linkClasses = 'nav-link d-flex align-items-center gap-3 position-relative';
         if ($isActive) {
@@ -114,8 +114,9 @@ $renderMenu = static function (array $menuItems, string $active): string {
         $icon = htmlspecialchars($item['icon'] ?? '', ENT_QUOTES, 'UTF-8');
         $label = htmlspecialchars($item['label'] ?? '', ENT_QUOTES, 'UTF-8');
         $href = htmlspecialchars($item['href'] ?? '#', ENT_QUOTES, 'UTF-8');
-        
-        $html .= '<li class="nav-item mb-1">';
+        $delay = number_format($index * 0.06, 2, '.', '');
+
+        $html .= '<li class="nav-item mb-1" style="--nav-delay: ' . $delay . 's;">';
         $html .= '<a class="' . $linkClasses . '" href="' . $href . '" data-powered-by="Claude Code">';
         if ($icon !== '') {
             $html .= '<i class="bi ' . $icon . ' nav-icon" aria-hidden="true"></i>';
@@ -259,6 +260,10 @@ $renderMenu = static function (array $menuItems, string $active): string {
 
     .nav-item {
         margin-bottom: 2px;
+        opacity: 0;
+        transform: translateX(-16px);
+        animation: navSlideIn 0.45s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+        animation-delay: var(--nav-delay, 0s);
     }
 
     .nav-link {
@@ -328,6 +333,17 @@ $renderMenu = static function (array $menuItems, string $active): string {
     @keyframes pulse {
         0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
         50% { opacity: 0.7; transform: translateY(-50%) scale(1.2); }
+    }
+
+    @keyframes navSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     .nav-icon {
@@ -447,6 +463,23 @@ $renderMenu = static function (array $menuItems, string $active): string {
         }
         .main-with-sidebar {
             margin-left: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nav-item {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+        .nav-link,
+        .nav-link::before,
+        .nav-link:hover,
+        .btn-logout,
+        .btn-logout::before,
+        .mobile-toggle,
+        .btn-close {
+            transition: none;
         }
     }
 
