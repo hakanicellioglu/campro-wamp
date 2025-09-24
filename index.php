@@ -28,16 +28,10 @@ if (!empty($_SESSION['user_id'])) {
             font-family: 'Inter', sans-serif;
         }
 
-        .card-wrapper {
-            display: flex;
+        .row.w-100 {
             max-width: 800px;
-            width: 100%;
             background: #f8f9fa;
-            /* Arka plandan ayrım olmaması için */
-            border-radius: 0;
-            /* Köşe yuvarlatmayı kaldırdık */
-            box-shadow: none;
-            /* Gölgeyi kaldırdık */
+            margin: 0 auto;
         }
 
         .left-box {
@@ -48,19 +42,16 @@ if (!empty($_SESSION['user_id'])) {
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            width: 50%;
         }
 
         .left-box .logo {
             font-family: "Monoton", sans-serif;
             font-size: 4rem;
-            font-weight: 700;
             letter-spacing: 5px;
             color: #212529;
         }
 
         .right-box {
-            flex: 1;
             padding: 40px;
             display: flex;
             flex-direction: column;
@@ -111,14 +102,14 @@ if (!empty($_SESSION['user_id'])) {
 
 <body>
 
-    <div class="card-wrapper">
+    <div class="row w-100">
         <!-- Sol kutu -->
-        <div class="left-box text-center">
+        <div class="col-12 col-md-5 left-box text-center">
             <span class="logo">NEXA</span>
         </div>
 
         <!-- Sağ kutu -->
-        <div class="right-box">
+        <div class="col-12 col-md-7 right-box">
             <p class="text-muted fs-3">Cam dünyasında profesyonel çözümler</p>
 
             <div class="d-grid gap-3 mb-3">
