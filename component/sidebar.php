@@ -347,6 +347,10 @@ $renderMenu = static function (array $menuItems, string $active, int $depth = 0)
         gap: 0.25rem;
     }
 
+    .nav.flex-column {
+        flex-direction: column;
+    }
+
     .nav-link,
     .submenu-toggle {
         border-radius: var(--radius);
