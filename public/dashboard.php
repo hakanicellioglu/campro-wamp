@@ -1,5 +1,4 @@
 <?php
-// dashboard.php — header.php + sidebar.php dahil edilerek yapılandırıldı
 declare(strict_types=1);
 
 session_start();
@@ -185,7 +184,6 @@ if (!empty($_GET['flash'])) {
     // Flash mesajlar için toast bileşeni (partials/flash.php dahil edildi)
     require_once __DIR__ . '/../partials/flash.php';
     ?>
-    <?php require_once __DIR__ . '/../component/header.php'; ?>
     <div class="d-flex">
         <?php require_once __DIR__ . '/../component/sidebar.php'; ?>
         <main class="main-with-sidebar flex-grow-1 p-4">
