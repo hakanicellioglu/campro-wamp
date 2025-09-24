@@ -18,15 +18,17 @@ $active = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $role = 'user';
 
-try {
-    $stmt = $pdo->prepare('SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = :id LIMIT 1');
-    $stmt->execute(['id' => $userId]);
-    $dbRole = $stmt->fetchColumn();
-    if (is_string($dbRole) && $dbRole !== '') {
-        $role = $dbRole;
+if ($userId > 0) {
+    try {
+        $stmt = $pdo->prepare('SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = :id LIMIT 1');
+        $stmt->execute(['id' => $userId]);
+        $dbRole = $stmt->fetchColumn();
+        if (is_string($dbRole) && $dbRole !== '') {
+            $role = $dbRole;
+        }
+    } catch (Throwable $e) {
+        $role = 'user';
     }
-} catch (Throwable $e) {
-    $role = 'user';
 }
 
 $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.php' : '../public/orders.php';

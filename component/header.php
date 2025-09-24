@@ -1,6 +1,8 @@
 <?php
 // component/header.php — ortak üst menü (bootstrap navbar, kullanıcı bilgisi + çıkış)
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -8,16 +10,25 @@ if (empty($_SESSION['csrf_token'])) {
 
 require_once __DIR__ . '/../config.php';
 
-$stmt = $pdo->prepare('SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = :id');
-$stmt->execute(['id' => $_SESSION['user_id'] ?? 0]);
-$role = $stmt->fetchColumn() ?: 'user';
+$userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+$role = 'user';
+$userName = 'User';
 
-$uStmt = $pdo->prepare('SELECT TRIM(CONCAT(first_name, " ", last_name)) AS full_name, username FROM users WHERE id = :id');
-$uStmt->execute(['id' => $_SESSION['user_id'] ?? 0]);
-$u = $uStmt->fetch(PDO::FETCH_ASSOC) ?: [];
-$fullName = $u['full_name'] ?? '';
-$username = $u['username'] ?? '';
-$userName = $fullName !== '' ? $fullName : ($username !== '' ? $username : 'User');
+if ($userId > 0) {
+    $stmt = $pdo->prepare('SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $roleName = $stmt->fetchColumn();
+    if (is_string($roleName) && $roleName !== '') {
+        $role = $roleName;
+    }
+
+    $uStmt = $pdo->prepare('SELECT TRIM(CONCAT(firstname, " ", surname)) AS full_name, username FROM users WHERE id = :id');
+    $uStmt->execute(['id' => $userId]);
+    $u = $uStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $fullName = $u['full_name'] ?? '';
+    $username = $u['username'] ?? '';
+    $userName = $fullName !== '' ? $fullName : ($username !== '' ? $username : 'User');
+}
 
 $csrfToken = $_SESSION['csrf_token'];
 ?>
