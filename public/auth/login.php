@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':username' => $identifier,
             ':email'    => $identifier,
         ]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user || !password_verify($password, (string) $user['password'])) {
             $errors['global'] = 'Kullanıcı adı/e-posta veya şifre hatalı.';
