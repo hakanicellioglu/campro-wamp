@@ -1,5 +1,5 @@
 <?php
-// public/auth/login.php
+
 declare(strict_types=1);
 
 session_start();
@@ -48,9 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $stmt = $pdo->prepare('SELECT id, password FROM users WHERE username = :identifier OR email = :identifier LIMIT 1');
-        $stmt->execute([':identifier' => $identifier]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare('SELECT id, password FROM users WHERE username = :username OR email = :email LIMIT 1');
+        $stmt->execute([
+            ':username' => $identifier,
+            ':email'    => $identifier,
+        ]);
 
         if (!$user || !password_verify($password, (string) $user['password'])) {
             $errors['global'] = 'Kullanıcı adı/e-posta veya şifre hatalı.';
@@ -121,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
                 radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
@@ -130,9 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(30px, -30px) rotate(120deg); }
-            66% { transform: translate(-20px, 20px) rotate(240deg); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
         }
 
         .page {
@@ -173,8 +185,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes logoGlow {
-            0% { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)); }
-            100% { filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.2)); }
+            0% {
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            }
+
+            100% {
+                filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.2));
+            }
         }
 
         .hero-text {
@@ -248,8 +265,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .alert-success {
@@ -440,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card">
                     <h1 class="headline">Tekrar Hoş Geldiniz</h1>
                     <p class="subtitle">Hesabınıza giriş yapın.</p>
-                    
+
                     <?php if (!empty($flash)) : ?>
                         <div class="alert alert-success"><?= htmlspecialchars($flash, ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
@@ -450,10 +474,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php if (!empty($errors['csrf'])) : ?>
                         <div class="alert alert-warning"><?= htmlspecialchars($errors['csrf'], ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
-                    
+
                     <form method="post" novalidate>
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
-                        
+
                         <div class="mb-4">
                             <label class="form-label">Kullanıcı adı veya e-posta</label>
                             <input type="text" name="identifier" class="form-control <?= isset($errors['identifier']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($identifier, ENT_QUOTES, 'UTF-8') ?>" required>
@@ -461,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="invalid-feedback"><?= htmlspecialchars($errors['identifier'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label class="form-label">Şifre</label>
                             <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
@@ -469,17 +493,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="invalid-feedback"><?= htmlspecialchars($errors['password'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
-                        
+
                         <div class="form-check mb-4">
                             <input class="form-check-input" type="checkbox" name="remember" id="remember" <?= $remember ? 'checked' : '' ?>>
                             <label class="form-check-label" for="remember">Beni hatırla</label>
                         </div>
-                        
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Giriş Yap</button>
                         </div>
                     </form>
-                    
+
                     <p class="login-link">Hesabınız yok mu? <a href="register.php">Kayıt Ol</a></p>
                 </div>
             </div>
