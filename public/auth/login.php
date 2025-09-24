@@ -455,6 +455,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
+    <?php
+    // Flash mesajlar için toast bileşeni (partials/flash.php dahil edildi)
+    require_once __DIR__ . '/../../partials/flash.php';
+    ?>
     <main class="page">
         <section class="shell">
             <div class="hero">

@@ -101,6 +101,10 @@ if (!empty($_SESSION['user_id'])) {
 </head>
 
 <body>
+    <?php
+    // Flash mesajlar için toast bileşeni (partials/flash.php dahil edildi)
+    require_once __DIR__ . '/partials/flash.php';
+    ?>
 
     <div class="row w-100">
         <!-- Sol kutu -->
