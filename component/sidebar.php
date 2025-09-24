@@ -132,7 +132,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
     return $html;
 };
 ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -155,12 +155,16 @@ $renderMenu = static function (array $menuItems, string $active): string {
         color: var(--ink);
     }
 
+    .sidebar-wrapper {
+        position: relative;
+    }
+
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
-        width: var(--sbw);
         height: 100vh;
+        width: var(--sbw);
         background: var(--sidebar-bg);
         border-right: 1px solid var(--sidebar-border);
         box-shadow: var(--sidebar-shadow);
@@ -205,30 +209,27 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 
     .sidebar-toggle {
-        position: absolute;
+        position: fixed;
         top: 1rem;
         left: calc(var(--sbw) - 44px);
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        border: 0;
-        background: #111827;
-        color: #f9fafb;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        transition: left 280ms ease, transform 280ms ease, background 180ms ease;
         z-index: 1040;
+        transition: left 280ms ease, transform 280ms ease, background-color 200ms ease, color 200ms ease;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
     }
 
-    .sidebar-toggle:hover {
-        background: #1f2937;
+    .sidebar-toggle .bi {
+        font-size: 1.15rem;
     }
 
-    .sidebar.is-collapsed .sidebar-toggle {
+    .sidebar.is-collapsed ~ .sidebar-toggle {
         left: 8px;
-        transform: translateX(var(--sbw));
+        transform: translateX(0);
     }
 
     .nav-groups {
@@ -313,19 +314,26 @@ $renderMenu = static function (array $menuItems, string $active): string {
         box-shadow: 0 12px 24px rgba(220, 38, 38, 0.35);
     }
 
+    .content {
+        transition: margin-left 280ms ease;
+    }
+
     body.has-sidebar .content {
         margin-left: var(--sbw);
-        transition: margin-left 280ms ease;
     }
 
     body.sidebar-collapsed .content {
         margin-left: 0;
     }
 
+    .sidebar.is-collapsed ~ .sidebar-toggle + .content {
+        margin-left: 0;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .sidebar,
         .sidebar-toggle,
-        body.has-sidebar .content {
+        .content {
             transition: none !important;
         }
     }
@@ -341,39 +349,48 @@ $renderMenu = static function (array $menuItems, string $active): string {
     }
 </style>
 
-<aside id="sidebar" class="sidebar" aria-label="Ana menü">
-    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar" aria-label="Menüyü kapat">
+<div class="sidebar-wrapper" data-powered-by="Claude Code">
+    <aside id="sidebar" class="sidebar" aria-label="Ana menü">
+        <header class="sidebar-header">
+            <span class="sidebar-logo">NEXA</span>
+            <span class="sidebar-subtitle">Panel</span>
+        </header>
+
+        <nav class="nav-groups" role="navigation">
+            <?php foreach ($menu as $groupTitle => $items): ?>
+                <section class="nav-group">
+                    <h2 class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
+                    <ul class="nav flex-column">
+                        <?= $renderMenu($items, $active); ?>
+                    </ul>
+                </section>
+            <?php endforeach; ?>
+        </nav>
+
+        <footer class="sidebar-footer">
+            <form action="../public/auth/logout.php" method="post">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="submit" class="btn-logout">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    Çıkış Yap
+                </button>
+            </form>
+        </footer>
+    </aside>
+    <button
+        id="sidebarToggle"
+        class="sidebar-toggle btn btn-dark"
+        type="button"
+        aria-label="Menüyü aç/kapat"
+        aria-controls="sidebar"
+        aria-expanded="true"
+    >
         <i class="bi bi-x-lg" aria-hidden="true"></i>
     </button>
-    <header class="sidebar-header">
-        <span class="sidebar-logo">NEXA</span>
-        <span class="sidebar-subtitle">Panel</span>
-    </header>
-
-    <nav class="nav-groups" role="navigation">
-        <?php foreach ($menu as $groupTitle => $items): ?>
-            <section class="nav-group">
-                <h2 class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
-                <ul class="nav flex-column">
-                    <?= $renderMenu($items, $active); ?>
-                </ul>
-            </section>
-        <?php endforeach; ?>
-    </nav>
-
-    <footer class="sidebar-footer">
-        <form action="../public/auth/logout.php" method="post">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-            <button type="submit" class="btn-logout">
-                <i class="bi bi-box-arrow-right me-2"></i>
-                Çıkış Yap
-            </button>
-        </form>
-    </footer>
-</aside>
+</div>
 
 <script>
-    (function () {
+    document.addEventListener('DOMContentLoaded', () => {
         const sidebar = document.getElementById('sidebar');
         const toggleButton = document.getElementById('sidebarToggle');
         if (!sidebar || !toggleButton) {
@@ -391,7 +408,6 @@ $renderMenu = static function (array $menuItems, string $active): string {
             sidebar.classList.toggle('is-collapsed', collapsed);
             document.body.classList.toggle('sidebar-collapsed', collapsed);
             toggleButton.setAttribute('aria-expanded', String(!collapsed));
-            toggleButton.setAttribute('aria-label', collapsed ? 'Menüyü aç' : 'Menüyü kapat');
             if (icon) {
                 icon.classList.remove('bi-list', 'bi-x-lg');
                 icon.classList.add(collapsed ? 'bi-list' : 'bi-x-lg');
@@ -438,5 +454,5 @@ $renderMenu = static function (array $menuItems, string $active): string {
                 setCollapsed(cached === '1' ? true : false, { store: false });
             }
         });
-    })();
+    });
 </script>
