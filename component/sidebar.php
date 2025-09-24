@@ -14,6 +14,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../assets/fonts/monoton.php';
 
 $active = basename($_SERVER['SCRIPT_NAME'] ?? '');
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $role = 'user';
@@ -44,10 +45,23 @@ $menu = [
             'match' => 'dashboard.php',
         ],
         [
-            'label' => 'Siparişler',
-            'icon'  => 'bi-receipt',
-            'href'  => $orderPath,
-            'match' => $orderMatch,
+            'label'     => 'Siparişler',
+            'icon'      => 'bi-receipt',
+            'href'      => $orderPath,
+            'match'     => $orderMatch,
+            'match_uri' => $orderMatch,
+            'children'  => [
+                [
+                    'label' => 'Aktif Siparişler',
+                    'href'  => $orderPath . '?view=active',
+                    'match_uri' => 'view=active',
+                ],
+                [
+                    'label' => 'Arşiv',
+                    'href'  => $orderPath . '?view=archived',
+                    'match_uri' => 'view=archived',
+                ],
+            ],
         ],
         [
             'label' => 'Ürünler',
@@ -76,10 +90,23 @@ $menu = [
             'match' => 'supplier-contact.php',
         ],
         [
-            'label' => 'Araçlar / Sevkiyat',
-            'icon'  => 'bi-truck',
-            'href'  => '../public/vehicle.php',
-            'match' => 'vehicle.php',
+            'label'     => 'Araçlar / Sevkiyat',
+            'icon'      => 'bi-truck',
+            'href'      => '../public/vehicle.php',
+            'match'     => 'vehicle.php',
+            'match_uri' => 'vehicle.php',
+            'children'  => [
+                [
+                    'label' => 'Planlanan Güzergah',
+                    'href'  => '../public/vehicle.php?view=routes',
+                    'match_uri' => 'view=routes',
+                ],
+                [
+                    'label' => 'Bakım Takvimi',
+                    'href'  => '../public/vehicle.php?view=maintenance',
+                    'match_uri' => 'view=maintenance',
+                ],
+            ],
         ],
     ],
     'Ayarlar' => [
@@ -103,145 +130,769 @@ if ($role === 'admin') {
 
 $csrfToken = $_SESSION['csrf_token'];
 
-$renderMenu = static function (array $menuItems, string $active): string {
+$renderMenu = static function (array $menuItems, string $active, string $requestUri): string {
     $html = '';
     foreach ($menuItems as $item) {
         $isActive = $active === ($item['match'] ?? '');
-        $linkClasses = 'nav-link d-flex align-items-center gap-2';
-        if ($isActive) {
-            $linkClasses .= ' active fw-bold';
+        $children = $item['children'] ?? [];
+        $hasChildren = is_array($children) && $children !== [];
+        $isChildActive = false;
+        $matchUri = (string)($item['match_uri'] ?? '');
+
+        if (!$isActive && $matchUri !== '' && $requestUri !== '' && strpos($requestUri, $matchUri) !== false) {
+            $isActive = true;
         }
+
+        if ($hasChildren) {
+            foreach ($children as $child) {
+                $childActive = $active === ($child['match'] ?? '');
+                $childMatchUri = (string)($child['match_uri'] ?? '');
+                if (!$childActive && $childMatchUri !== '' && $requestUri !== '' && strpos($requestUri, $childMatchUri) !== false) {
+                    $childActive = true;
+                }
+                if ($childActive) {
+                    $isChildActive = true;
+                }
+            }
+        }
+
+        if ($isChildActive) {
+            $isActive = true;
+        }
+
+        $linkClasses = 'nav-link d-flex align-items-center gap-3 position-relative';
+        if ($isActive) {
+            $linkClasses .= ' active';
+        }
+        if ($hasChildren) {
+            $linkClasses .= ' has-children';
+        }
+
         $icon = htmlspecialchars($item['icon'] ?? '', ENT_QUOTES, 'UTF-8');
         $label = htmlspecialchars($item['label'] ?? '', ENT_QUOTES, 'UTF-8');
         $href = htmlspecialchars($item['href'] ?? '#', ENT_QUOTES, 'UTF-8');
-        $html .= '<li class="nav-item">';
+
+        $html .= '<li class="nav-item mb-1' . ($hasChildren ? ' has-children' : '') . ($isActive ? ' is-active' : '') . '">';
         $html .= '<a class="' . $linkClasses . '" href="' . $href . '" data-powered-by="Claude Code">';
         if ($icon !== '') {
-            $html .= '<i class="bi ' . $icon . '" aria-hidden="true"></i>';
+            $html .= '<i class="bi ' . $icon . ' nav-icon" aria-hidden="true"></i>';
         }
-        $html .= '<span>' . $label . '</span>';
+        $html .= '<span class="nav-text">' . $label . '</span>';
+        if ($hasChildren) {
+            $html .= '<button class="submenu-toggle" type="button" aria-label="Alt menüyü aç" aria-expanded="' . (($isActive || $isChildActive) ? 'true' : 'false') . '">';
+            $html .= '<i class="bi bi-chevron-down" aria-hidden="true"></i>';
+            $html .= '</button>';
+        }
+        if ($isActive) {
+            $html .= '<div class="nav-indicator"></div>';
+        }
         $html .= '</a>';
+
+        if ($hasChildren) {
+            $html .= '<ul class="submenu-list' . (($isActive || $isChildActive) ? ' open' : '') . '">';
+            foreach ($children as $child) {
+                $childLabel = htmlspecialchars($child['label'] ?? '', ENT_QUOTES, 'UTF-8');
+                $childHref = htmlspecialchars($child['href'] ?? '#', ENT_QUOTES, 'UTF-8');
+                $childActive = $active === ($child['match'] ?? '');
+                $childMatchUri = (string)($child['match_uri'] ?? '');
+                if (!$childActive && $childMatchUri !== '' && $requestUri !== '' && strpos($requestUri, $childMatchUri) !== false) {
+                    $childActive = true;
+                }
+                $childClass = 'submenu-link';
+                if ($childActive) {
+                    $childClass .= ' active';
+                }
+                $html .= '<li>';
+                $html .= '<a class="' . $childClass . '" href="' . $childHref . '">';
+                $html .= '<span>' . $childLabel . '</span>';
+                if ($childActive) {
+                    $html .= '<i class="bi bi-dot submenu-indicator" aria-hidden="true"></i>';
+                }
+                $html .= '</a>';
+                $html .= '</li>';
+            }
+            $html .= '</ul>';
+        }
+
         $html .= '</li>';
     }
     return $html;
 };
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    :root { --ink:#0f1419; --muted:#536471; --line:#e6e6e6; --radius:14px; }
-    body {
-        color: var(--ink);
+    :root {
+        --sidebar-bg: #ffffff;
+        --sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --ink: #1a1a1a;
+        --ink-light: #374151;
+        --ink-lighter: #6b7280;
+        --ink-lightest: #9ca3af;
+        --surface: #f8fafc;
+        --surface-hover: #f1f5f9;
+        --border: #e5e7eb;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --success: #10b981;
+        --danger: #ef4444;
+        --radius: 12px;
+        --radius-lg: 16px;
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+    }
+
     #sidebar {
-        width: 280px;
-        min-height: 100vh;
+        width: 260px;
+        height: calc(100vh - 32px);
         position: fixed;
+        top: 16px;
+        left: 16px;
+        background: var(--sidebar-bg);
+        box-shadow: var(--sidebar-shadow);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        z-index: 1000;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 1rem;
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.3s ease,
+                    padding 0.3s ease;
+    }
+
+    .sidebar-header {
+        padding: 1.25rem 1.25rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        position: relative;
+    }
+
+    .sidebar-header::before {
+        content: '';
+        position: absolute;
         top: 0;
         left: 0;
-        padding: 1.5rem 1rem;
-        background-color: #fff;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
     }
-    .sidebar .nav-link {
-        color: var(--muted);
-        border-radius: var(--radius);
-        padding: .5rem .75rem;
-        transition: background-color .2s ease, color .2s ease;
-    }
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link:focus {
-        color: var(--ink);
-        background-color: rgba(15, 20, 25, 0.08);
-        text-decoration: none;
-    }
-    .sidebar .nav-link.active {
-        color: var(--ink);
-        background-color: rgba(15, 20, 25, 0.12);
-    }
-    .sidebar .nav-group {
-        margin-bottom: 1.5rem;
-    }
-    .sidebar .nav-group-title {
-        font-size: .75rem;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: .5rem;
-    }
+
     .sidebar-logo {
         font-family: 'Monoton', cursive;
-        font-size: 1.75rem;
-        letter-spacing: .08em;
+        font-size: 2rem;
+        letter-spacing: 0.1em;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 4px;
+        animation: logoShimmer 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes logoShimmer {
+        0% { filter: brightness(1); }
+        100% { filter: brightness(1.2); }
+    }
+
+    .sidebar-subtitle {
+        color: var(--ink-lighter);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .sidebar-content {
+        padding: 1.25rem;
+    }
+
+    .nav-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .nav-group-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-lightest);
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+        position: relative;
+    }
+
+    .nav-group-title::after {
+        content: '';
+        position: absolute;
+        bottom: -0.5rem;
+        left: 1rem;
+        right: 1rem;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    .nav-item {
+        margin-bottom: 4px;
+    }
+
+    .nav-link {
+        color: var(--ink-lighter);
+        border-radius: var(--radius);
+        padding: 0.75rem 0.875rem;
+        transition: var(--transition);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid transparent;
+    }
+
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .nav-link:hover {
+        color: var(--ink);
+        background: var(--surface-hover);
+        transform: translateX(4px);
+        border-color: var(--border);
+    }
+
+    .nav-link:hover::before {
+        left: 100%;
+    }
+
+    .nav-link:hover .nav-icon {
+        transform: scale(1.1);
+    }
+
+    .nav-link.has-children {
+        padding-right: 2.5rem;
+    }
+
+    .nav-item.has-children .submenu-toggle {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink-lighter);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .nav-item.has-children .submenu-toggle:hover {
+        color: var(--ink);
+        background: var(--surface-hover);
+    }
+
+    .nav-item.has-children.is-active .submenu-toggle {
+        color: var(--accent-purple);
+        border-color: rgba(102, 126, 234, 0.3);
+        background: rgba(102, 126, 234, 0.08);
+    }
+
+    .nav-item.has-children .submenu-toggle .bi {
+        transition: transform 0.3s ease;
+        font-size: 0.85rem;
+    }
+
+    .nav-item.has-children.submenu-open .submenu-toggle .bi {
+        transform: rotate(180deg);
+    }
+
+    .submenu-list {
+        list-style: none;
+        padding: 0.35rem 0 0.35rem 3rem;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .submenu-list.open {
+        max-height: 480px;
+    }
+
+    .submenu-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius);
+        color: var(--ink-lighter);
+        text-decoration: none;
+        font-size: 0.8125rem;
+        transition: var(--transition);
+        background: transparent;
+    }
+
+    .submenu-link:hover {
+        background: var(--surface-hover);
         color: var(--ink);
     }
-    .sidebar-subtitle {
-        color: var(--muted);
-        font-size: .8rem;
+
+    .submenu-link.active {
+        background: rgba(102, 126, 234, 0.12);
+        color: var(--ink);
+        font-weight: 600;
     }
+
+    .submenu-indicator {
+        font-size: 1.25rem;
+        color: var(--accent-purple);
+    }
+
+    .nav-link.active {
+        color: var(--ink);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        border-color: rgba(102, 126, 234, 0.3);
+        font-weight: 600;
+        transform: translateX(4px);
+    }
+
+    .nav-link.active .nav-icon {
+        color: #667eea;
+        transform: scale(1.1);
+    }
+
+    .nav-indicator {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        50% { opacity: 0.7; transform: translateY(-50%) scale(1.2); }
+    }
+
+    .nav-icon {
+        font-size: 1.125rem;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .nav-text {
+        transition: var(--transition);
+    }
+
+    .sidebar-footer {
+        padding: 1.25rem;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+    }
+
+    .btn-logout {
+        background: linear-gradient(135deg, var(--danger), #dc2626);
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: white;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-logout::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-logout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-logout:hover::before {
+        left: 100%;
+    }
+
     .main-with-sidebar {
-        margin-left: 280px;
+        margin-left: 292px;
+        min-height: 100vh;
+        transition: margin-left 0.35s ease;
     }
+
+    #sidebar.collapsed {
+        transform: translateX(calc(-100% - 32px));
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #sidebar.collapsed .submenu-list {
+        max-height: 0 !important;
+        padding: 0;
+        margin: 0;
+    }
+
+    body.sidebar-collapsed .main-with-sidebar {
+        margin-left: 72px;
+    }
+
+    .sidebar-collapse-toggle {
+        position: fixed;
+        top: 18px;
+        left: calc(16px + 260px - 18px);
+        z-index: 1100;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink-lighter);
+        transition: var(--transition);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .sidebar-collapse-toggle:hover {
+        color: var(--ink);
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+    }
+
+    body.sidebar-collapsed .sidebar-collapse-toggle {
+        left: 16px;
+    }
+
+    /* Mobile Header */
+    .mobile-header {
+        background: var(--sidebar-bg);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .mobile-toggle {
+        background: linear-gradient(135deg, var(--surface), var(--surface-hover));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        transition: var(--transition);
+        color: var(--ink-lighter);
+    }
+
+    .mobile-toggle:hover {
+        background: var(--surface-hover);
+        color: var(--ink);
+        transform: scale(1.05);
+    }
+
+    /* Offcanvas Styling */
+    .offcanvas {
+        background: var(--sidebar-bg);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--border);
+    }
+
+    .offcanvas-header {
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .btn-close {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        opacity: 0.8;
+        transition: var(--transition);
+    }
+
+    .btn-close:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
     @media (max-width: 991.98px) {
         #sidebar {
             display: none;
         }
         .main-with-sidebar {
-            margin-left: 0;
+            margin-left: 0 !important;
+        }
+        .sidebar-collapse-toggle {
+            display: none;
         }
     }
+
+    /* Scrollbar Styling */
+    #sidebar::-webkit-scrollbar,
+    .offcanvas-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #sidebar::-webkit-scrollbar-track,
+    .offcanvas-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb,
+    .offcanvas-body::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb:hover,
+    .offcanvas-body::-webkit-scrollbar-thumb:hover {
+        background: var(--ink-lightest);
+    }
 </style>
-<div class="d-lg-none px-3 py-2 border-bottom bg-white">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <span class="sidebar-logo">NEXA</span><br>
-            <small class="sidebar-subtitle">Panel</small>
+
+<!-- Mobile Header -->
+<div class="d-lg-none mobile-header">
+    <div class="container-fluid px-3 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="sidebar-logo">NEXA</span>
+                <div class="sidebar-subtitle">Panel</div>
+            </div>
+            <button class="mobile-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                <i class="bi bi-list"></i>
+                <span class="visually-hidden">Menüyü Aç</span>
+            </button>
         </div>
-        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
-            <i class="bi bi-list"></i>
-            <span class="visually-hidden">Menüyü Aç</span>
-        </button>
     </div>
 </div>
-<aside id="sidebar" class="sidebar border-end" data-powered-by="Claude Code">
-    <div class="mb-4">
-        <span class="sidebar-logo">NEXA</span><br>
-        <small class="sidebar-subtitle">Panel</small>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('sidebar');
+    const collapseToggle = document.querySelector('.sidebar-collapse-toggle');
+    const submenuItems = document.querySelectorAll('#sidebar .nav-item.has-children');
+
+    const refreshSubmenus = function () {
+        if (!sidebar || sidebar.classList.contains('collapsed')) {
+            return;
+        }
+        submenuItems.forEach(function (item) {
+            const list = item.querySelector('.submenu-list');
+            if (!list || !list.classList.contains('open')) {
+                return;
+            }
+            list.style.maxHeight = list.scrollHeight + 'px';
+            item.classList.add('submenu-open');
+        });
+    };
+
+    const setSidebarCollapsed = function (collapsed) {
+        if (!sidebar) {
+            return;
+        }
+        sidebar.classList.toggle('collapsed', collapsed);
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        sidebar.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
+
+        if (collapseToggle) {
+            collapseToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            const icon = collapseToggle.querySelector('i');
+            const label = collapseToggle.querySelector('.visually-hidden');
+            if (icon) {
+                icon.classList.toggle('bi-chevron-left', !collapsed);
+                icon.classList.toggle('bi-chevron-right', collapsed);
+            }
+            if (label) {
+                label.textContent = collapsed ? 'Menüyü genişlet' : 'Menüyü daralt';
+            }
+        }
+
+        if (collapsed) {
+            submenuItems.forEach(function (item) {
+                const list = item.querySelector('.submenu-list');
+                if (!list) {
+                    return;
+                }
+                list.style.maxHeight = '0px';
+                item.classList.remove('submenu-open');
+            });
+        } else {
+            refreshSubmenus();
+        }
+    };
+
+    submenuItems.forEach(function (item) {
+        const toggle = item.querySelector('.submenu-toggle');
+        const list = item.querySelector('.submenu-list');
+        if (!toggle || !list) {
+            return;
+        }
+
+        const isInitiallyOpen = list.classList.contains('open');
+        if (isInitiallyOpen) {
+            list.style.maxHeight = list.scrollHeight + 'px';
+            item.classList.add('submenu-open');
+            toggle.setAttribute('aria-expanded', 'true');
+        } else {
+            list.style.maxHeight = '0px';
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const shouldOpen = !list.classList.contains('open');
+            if (shouldOpen) {
+                list.classList.add('open');
+                list.style.maxHeight = list.scrollHeight + 'px';
+                item.classList.add('submenu-open');
+                toggle.setAttribute('aria-expanded', 'true');
+            } else {
+                list.classList.remove('open');
+                list.style.maxHeight = '0px';
+                item.classList.remove('submenu-open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+
+    if (collapseToggle && sidebar) {
+        collapseToggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            const collapsed = sidebar.classList.contains('collapsed');
+            setSidebarCollapsed(!collapsed);
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        refreshSubmenus();
+    });
+
+    const initialCollapsed = (sidebar && sidebar.classList.contains('collapsed')) || document.body.classList.contains('sidebar-collapsed');
+    setSidebarCollapsed(Boolean(initialCollapsed));
+    refreshSubmenus();
+});
+</script>
+
+<!-- Desktop Sidebar -->
+<aside id="sidebar" class="d-flex flex-column" data-powered-by="Claude Code">
+    <div class="sidebar-header">
+        <span class="sidebar-logo">NEXA</span>
+        <div class="sidebar-subtitle">Panel</div>
     </div>
-    <?php foreach ($menu as $groupTitle => $items): ?>
-        <div class="nav-group">
-            <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
-            <ul class="nav flex-column">
-                <?= $renderMenu($items, $active); ?>
-            </ul>
-        </div>
-    <?php endforeach; ?>
-    <div class="mt-auto pt-4">
-        <form action="../public/auth/logout.php" method="post">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-            <button type="submit" class="btn btn-outline-danger w-100">Çıkış</button>
-        </form>
-    </div>
-</aside>
-<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" data-powered-by="Claude Code">
-    <div class="offcanvas-header border-bottom">
-        <div>
-            <span class="sidebar-logo">NEXA</span><br>
-            <small class="sidebar-subtitle">Panel</small>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column">
+    
+    <div class="sidebar-content flex-grow-1">
         <?php foreach ($menu as $groupTitle => $items): ?>
             <div class="nav-group">
                 <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
                 <ul class="nav flex-column">
-                    <?= $renderMenu($items, $active); ?>
+                    <?= $renderMenu($items, $active, $requestUri); ?>
                 </ul>
             </div>
         <?php endforeach; ?>
-        <div class="mt-auto pt-4">
+    </div>
+    
+    <div class="sidebar-footer">
+        <form action="../public/auth/logout.php" method="post">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+            <button type="submit" class="btn-logout">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Çıkış Yap
+            </button>
+        </form>
+    </div>
+</aside>
+
+<button class="sidebar-collapse-toggle d-none d-lg-inline-flex" type="button" aria-controls="sidebar" aria-expanded="true">
+    <i class="bi bi-chevron-left"></i>
+    <span class="visually-hidden">Menüyü daralt</span>
+</button>
+
+<!-- Mobile Offcanvas -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" data-powered-by="Claude Code">
+    <div class="offcanvas-header">
+        <div>
+            <span class="sidebar-logo">NEXA</span>
+            <div class="sidebar-subtitle">Panel</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div class="flex-grow-1">
+            <?php foreach ($menu as $groupTitle => $items): ?>
+                <div class="nav-group">
+                    <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <ul class="nav flex-column">
+                        <?= $renderMenu($items, $active, $requestUri); ?>
+                    </ul>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="sidebar-footer">
             <form action="../public/auth/logout.php" method="post">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn btn-outline-danger w-100">Çıkış</button>
+                <button type="submit" class="btn-logout">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    Çıkış Yap
+                </button>
             </form>
         </div>
     </div>
