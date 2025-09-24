@@ -175,8 +175,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .card {
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
+            min-width: 500px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: none;
         }
 
         .form-control,
