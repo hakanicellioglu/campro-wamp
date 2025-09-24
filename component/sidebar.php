@@ -48,18 +48,41 @@ $menu = [
             'icon'  => 'bi-receipt',
             'href'  => $orderPath,
             'match' => $orderMatch,
+            'children' => [
+                [
+                    'label' => 'Sipariş Listesi',
+                    'href'  => $orderPath,
+                    'match' => $orderMatch,
+                ],
+                [
+                    'label' => 'Satışlar',
+                    'href'  => '../public/sale.php',
+                    'match' => 'sale.php',
+                ],
+                [
+                    'label' => 'Optimizasyon',
+                    'href'  => '../public/optimizasyon.php',
+                    'match' => 'optimizasyon.php',
+                ],
+            ],
         ],
         [
             'label' => 'Ürünler',
             'icon'  => 'bi-box',
             'href'  => '../public/product.php',
             'match' => 'product.php',
-        ],
-        [
-            'label' => 'Fiyatlar',
-            'icon'  => 'bi-cash-coin',
-            'href'  => '../public/price.php',
-            'match' => 'price.php',
+            'children' => [
+                [
+                    'label' => 'Ürün Kataloğu',
+                    'href'  => '../public/product.php',
+                    'match' => 'product.php',
+                ],
+                [
+                    'label' => 'Fiyat Listesi',
+                    'href'  => '../public/price.php',
+                    'match' => 'price.php',
+                ],
+            ],
         ],
     ],
     'Tedarik' => [
@@ -68,12 +91,18 @@ $menu = [
             'icon'  => 'bi-people',
             'href'  => '../public/supplier.php',
             'match' => 'supplier.php',
-        ],
-        [
-            'label' => 'Tedarikçi İletişim',
-            'icon'  => 'bi-telephone-forward',
-            'href'  => '../public/supplier-contact.php',
-            'match' => 'supplier-contact.php',
+            'children' => [
+                [
+                    'label' => 'Tedarikçi Yönetimi',
+                    'href'  => '../public/supplier.php',
+                    'match' => 'supplier.php',
+                ],
+                [
+                    'label' => 'İletişim Bilgileri',
+                    'href'  => '../public/supplier-contact.php',
+                    'match' => 'supplier-contact.php',
+                ],
+            ],
         ],
         [
             'label' => 'Araçlar / Sevkiyat',
@@ -103,20 +132,65 @@ if ($role === 'admin') {
 
 $csrfToken = $_SESSION['csrf_token'];
 
-$renderMenu = static function (array $menuItems, string $active): string {
+$renderMenu = static function (array $menuItems, string $active, bool $isSubmenu = false, string $prefix = '') use (&$renderMenu): string {
     $html = '';
     foreach ($menuItems as $index => $item) {
-        $isActive = $active === ($item['match'] ?? '');
+        $children = is_array($item['children'] ?? null) ? $item['children'] : [];
+        $hasChildren = $children !== [];
+        $childActive = false;
+
+        if ($hasChildren) {
+            foreach ($children as $child) {
+                if ($active === ($child['match'] ?? '')) {
+                    $childActive = true;
+                    break;
+                }
+            }
+        }
+
+        $isActiveSelf = $active === ($item['match'] ?? '');
+        $isActive = $isActiveSelf || $childActive;
+        $icon = htmlspecialchars($item['icon'] ?? '', ENT_QUOTES, 'UTF-8');
+        $label = htmlspecialchars($item['label'] ?? '', ENT_QUOTES, 'UTF-8');
+        $href = htmlspecialchars($item['href'] ?? '#', ENT_QUOTES, 'UTF-8');
+
+        if ($isSubmenu) {
+            $linkClasses = 'nav-sublink d-flex align-items-center gap-2';
+            if ($isActiveSelf) {
+                $linkClasses .= ' active';
+            }
+
+            $html .= '<li class="nav-subitem">';
+            $html .= '<a class="' . $linkClasses . '" href="' . $href . '">';
+            $html .= '<span class="nav-sub-indicator" aria-hidden="true"></span>';
+            $html .= '<span class="nav-text">' . $label . '</span>';
+            $html .= '</a>';
+
+            if ($hasChildren) {
+                $html .= '<ul class="nav-submenu nested" role="group">';
+                $html .= $renderMenu($children, $active, true, $prefix);
+                $html .= '</ul>';
+            }
+
+            $html .= '</li>';
+            continue;
+        }
+
         $linkClasses = 'nav-link d-flex align-items-center gap-3 position-relative';
         if ($isActive) {
             $linkClasses .= ' active';
         }
-        $icon = htmlspecialchars($item['icon'] ?? '', ENT_QUOTES, 'UTF-8');
-        $label = htmlspecialchars($item['label'] ?? '', ENT_QUOTES, 'UTF-8');
-        $href = htmlspecialchars($item['href'] ?? '#', ENT_QUOTES, 'UTF-8');
-        $delay = number_format($index * 0.06, 2, '.', '');
 
-        $html .= '<li class="nav-item mb-1" style="--nav-delay: ' . $delay . 's;">';
+        $delay = number_format($index * 0.06, 2, '.', '');
+        $itemClasses = 'nav-item mb-1';
+        if ($hasChildren) {
+            $itemClasses .= ' nav-item-has-children';
+        }
+
+        $submenuId = $prefix . 'submenu-' . md5($label . '-' . $index);
+
+        $html .= '<li class="' . $itemClasses . '" style="--nav-delay: ' . $delay . 's;">';
+        $html .= '<div class="nav-link-wrapper">';
         $html .= '<a class="' . $linkClasses . '" href="' . $href . '" data-powered-by="Claude Code">';
         if ($icon !== '') {
             $html .= '<i class="bi ' . $icon . ' nav-icon" aria-hidden="true"></i>';
@@ -126,6 +200,28 @@ $renderMenu = static function (array $menuItems, string $active): string {
             $html .= '<div class="nav-indicator"></div>';
         }
         $html .= '</a>';
+
+        if ($hasChildren) {
+            $expanded = $childActive ? 'true' : 'false';
+            $html .= '<button class="nav-sub-toggle" type="button" aria-expanded="' . $expanded . '" aria-controls="' . $submenuId . '">';
+            $html .= '<i class="bi bi-chevron-down" aria-hidden="true"></i>';
+            $html .= '<span class="visually-hidden">' . $label . ' alt menüsünü aç/kapat</span>';
+            $html .= '</button>';
+        }
+
+        $html .= '</div>';
+
+        if ($hasChildren) {
+            $submenuClasses = 'nav-submenu';
+            if ($childActive) {
+                $submenuClasses .= ' show';
+            }
+            $ariaHidden = $childActive ? 'false' : 'true';
+            $html .= '<ul class="' . $submenuClasses . '" id="' . $submenuId . '" role="group" aria-hidden="' . $ariaHidden . '">';
+            $html .= $renderMenu($children, $active, true, $prefix);
+            $html .= '</ul>';
+        }
+
         $html .= '</li>';
     }
     return $html;
@@ -264,6 +360,13 @@ $renderMenu = static function (array $menuItems, string $active): string {
         transform: translateX(-16px);
         animation: navSlideIn 0.45s cubic-bezier(0.33, 1, 0.68, 1) forwards;
         animation-delay: var(--nav-delay, 0s);
+        list-style: none;
+    }
+
+    .nav-link-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
     }
 
     .nav-link {
@@ -277,6 +380,15 @@ $renderMenu = static function (array $menuItems, string $active): string {
         position: relative;
         overflow: hidden;
         border: 1px solid transparent;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 2.75rem;
+    }
+
+    .nav-item-has-children .nav-link {
+        padding-right: 2.5rem;
     }
 
     .nav-link::before {
@@ -318,6 +430,36 @@ $renderMenu = static function (array $menuItems, string $active): string {
         transform: scale(1.1);
     }
 
+    .nav-sub-toggle {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--ink-lighter);
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--radius);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+
+    .nav-sub-toggle:hover,
+    .nav-sub-toggle:focus-visible {
+        color: var(--ink);
+        border-color: rgba(102, 126, 234, 0.35);
+        background: rgba(102, 126, 234, 0.08);
+        outline: none;
+    }
+
+    .nav-sub-toggle[aria-expanded="true"] i {
+        transform: rotate(180deg);
+    }
+
+    .nav-sub-toggle i {
+        transition: transform 0.3s ease;
+    }
+
     .nav-indicator {
         position: absolute;
         right: 0.85rem;
@@ -354,6 +496,70 @@ $renderMenu = static function (array $menuItems, string $active): string {
 
     .nav-text {
         transition: var(--transition);
+    }
+
+    .nav-submenu {
+        list-style: none;
+        margin: 0.35rem 0 0.6rem;
+        padding-left: 1.5rem;
+        border-left: 1px solid rgba(102, 126, 234, 0.12);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease;
+    }
+
+    .nav-submenu.show {
+        max-height: 999px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .nav-submenu.nested {
+        margin-left: 0.75rem;
+    }
+
+    .nav-subitem {
+        margin-bottom: 0.4rem;
+    }
+
+    .nav-sublink {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--ink-lightest);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-decoration: none;
+        padding: 0.35rem 0;
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .nav-sublink:hover,
+    .nav-sublink:focus-visible {
+        color: var(--ink);
+        transform: translateX(4px);
+        outline: none;
+    }
+
+    .nav-sublink.active {
+        color: #6366f1;
+        font-weight: 600;
+    }
+
+    .nav-sub-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.25);
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .nav-sublink.active .nav-sub-indicator {
+        background: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
     }
 
     .sidebar-footer {
@@ -478,7 +684,11 @@ $renderMenu = static function (array $menuItems, string $active): string {
         .btn-logout,
         .btn-logout::before,
         .mobile-toggle,
-        .btn-close {
+        .btn-close,
+        .nav-sub-toggle,
+        .nav-sub-toggle i,
+        .nav-submenu,
+        .nav-sublink {
             transition: none;
         }
     }
@@ -534,7 +744,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
             <div class="nav-group">
                 <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
                 <ul class="nav flex-column">
-                    <?= $renderMenu($items, $active); ?>
+                    <?= $renderMenu($items, $active, false, 'desktop-'); ?>
                 </ul>
             </div>
         <?php endforeach; ?>
@@ -566,7 +776,7 @@ $renderMenu = static function (array $menuItems, string $active): string {
                 <div class="nav-group">
                     <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
                     <ul class="nav flex-column">
-                        <?= $renderMenu($items, $active); ?>
+                        <?= $renderMenu($items, $active, false, 'mobile-'); ?>
                     </ul>
                 </div>
             <?php endforeach; ?>
@@ -582,3 +792,26 @@ $renderMenu = static function (array $menuItems, string $active): string {
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toggles = document.querySelectorAll('.nav-sub-toggle');
+    toggles.forEach(function (toggle) {
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            var targetId = toggle.getAttribute('aria-controls');
+            if (!targetId) {
+                return;
+            }
+            var submenu = document.getElementById(targetId);
+            if (!submenu) {
+                return;
+            }
+            var expanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+            submenu.classList.toggle('show', !expanded);
+            submenu.setAttribute('aria-hidden', expanded ? 'true' : 'false');
+        });
+    });
+});
+</script>
