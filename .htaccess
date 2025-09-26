@@ -1,0 +1,22 @@
+# Enable URL rewriting for clean URLs
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect requests for existing files or directories as-is
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Otherwise, route the request through index.php
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Deny access to hidden files (beginning with .)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Custom error documents
+ErrorDocument 403 /error/403.php
+ErrorDocument 404 /error/404.php
+ErrorDocument 500 /error/500.php
