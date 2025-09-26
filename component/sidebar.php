@@ -135,91 +135,117 @@ $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.ph
 $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
 
+$vehicleExists = file_exists(__DIR__ . '/../public/vehicle.php');
+$vehicleHref = $vehicleExists ? '../public/vehicle.php' : '#';
+
+$shipmentFile = null;
+foreach (['shipment.php', 'shipments.php', 'sevkiyat.php'] as $candidate) {
+    if (file_exists(__DIR__ . '/../public/' . $candidate)) {
+        $shipmentFile = $candidate;
+        break;
+    }
+}
+
+$projectFile = null;
+foreach (['projects.php', 'project.php', 'proje.php'] as $candidate) {
+    if (file_exists(__DIR__ . '/../public/' . $candidate)) {
+        $projectFile = $candidate;
+        break;
+    }
+}
+
 $menu = [
-    'Genel' => [
-        [
-            'label' => 'Dashboard',
-            'icon'  => 'bi-speedometer2',
-            'href'  => '../public/dashboard.php',
-            'match' => 'dashboard.php',
-        ],
-        [
-            'label'     => 'Siparişler',
-            'icon'      => 'bi-receipt',
-            'href'      => $orderPath,
-            'match'     => $orderMatch,
-            'match_uri' => $orderMatch,
-            'children'  => [
-                [
-                    'label' => 'Aktif Siparişler',
-                    'href'  => $orderPath . '?view=active',
-                    'match_uri' => 'view=active',
-                ],
-                [
-                    'label' => 'Arşiv',
-                    'href'  => $orderPath . '?view=archived',
-                    'match_uri' => 'view=archived',
-                ],
+    [
+        'label' => 'Dashboard',
+        'icon'  => 'bi-speedometer2',
+        'href'  => '../public/dashboard.php',
+        'match' => 'dashboard.php',
+    ],
+    [
+        'label' => 'Ürünler',
+        'icon'  => 'bi-box',
+        'href'  => '../public/product.php',
+        'match' => 'product.php',
+    ],
+    [
+        'label' => 'Fiyatlar',
+        'icon'  => 'bi-cash-coin',
+        'href'  => '../public/price.php',
+        'match' => 'price.php',
+    ],
+    [
+        'label'     => 'Araçlar',
+        'icon'      => 'bi-truck',
+        'href'      => $vehicleHref,
+        'match'     => $vehicleExists ? 'vehicle.php' : '',
+        'match_uri' => $vehicleExists ? 'vehicle.php' : '',
+        'children'  => $vehicleExists ? [
+            [
+                'label' => 'Planlanan Güzergah',
+                'href'  => '../public/vehicle.php?view=routes',
+                'match_uri' => 'view=routes',
+            ],
+            [
+                'label' => 'Bakım Takvimi',
+                'href'  => '../public/vehicle.php?view=maintenance',
+                'match_uri' => 'view=maintenance',
+            ],
+        ] : [],
+    ],
+    [
+        'label'     => 'Sevkiyatlar',
+        'icon'      => 'bi-box-arrow-up-right',
+        'href'      => $shipmentFile !== null ? '../public/' . $shipmentFile : ($vehicleExists ? '../public/vehicle.php?view=shipments' : '#'),
+        'match'     => $shipmentFile !== null ? $shipmentFile : '',
+        'match_uri' => $shipmentFile !== null ? $shipmentFile : ($vehicleExists ? 'view=shipments' : ''),
+    ],
+    [
+        'label' => 'Tedarikçi',
+        'icon'  => 'bi-people',
+        'href'  => '../public/supplier.php',
+        'match' => 'supplier.php',
+    ],
+    [
+        'label' => 'Tedarikçi Yetkilisi',
+        'icon'  => 'bi-person-lines-fill',
+        'href'  => '../public/supplier-contact.php',
+        'match' => 'supplier-contact.php',
+    ],
+    [
+        'label' => 'Projeler',
+        'icon'  => 'bi-kanban',
+        'href'  => $projectFile !== null ? '../public/' . $projectFile : '#',
+        'match' => $projectFile !== null ? $projectFile : '',
+    ],
+    [
+        'label'     => 'Siparişler',
+        'icon'      => 'bi-receipt',
+        'href'      => $orderPath,
+        'match'     => $orderMatch,
+        'match_uri' => $orderMatch,
+        'children'  => [
+            [
+                'label' => 'Aktif Siparişler',
+                'href'  => $orderPath . '?view=active',
+                'match_uri' => 'view=active',
+            ],
+            [
+                'label' => 'Arşiv',
+                'href'  => $orderPath . '?view=archived',
+                'match_uri' => 'view=archived',
             ],
         ],
-        [
-            'label' => 'Ürünler',
-            'icon'  => 'bi-box',
-            'href'  => '../public/product.php',
-            'match' => 'product.php',
-        ],
-        [
-            'label' => 'Fiyatlar',
-            'icon'  => 'bi-cash-coin',
-            'href'  => '../public/price.php',
-            'match' => 'price.php',
-        ],
     ],
-    'Tedarik' => [
-        [
-            'label' => 'Tedarikçiler',
-            'icon'  => 'bi-people',
-            'href'  => '../public/supplier.php',
-            'match' => 'supplier.php',
-        ],
-        [
-            'label' => 'Tedarikçi İletişim',
-            'icon'  => 'bi-telephone-forward',
-            'href'  => '../public/supplier-contact.php',
-            'match' => 'supplier-contact.php',
-        ],
-        [
-            'label'     => 'Araçlar / Sevkiyat',
-            'icon'      => 'bi-truck',
-            'href'      => '../public/vehicle.php',
-            'match'     => 'vehicle.php',
-            'match_uri' => 'vehicle.php',
-            'children'  => [
-                [
-                    'label' => 'Planlanan Güzergah',
-                    'href'  => '../public/vehicle.php?view=routes',
-                    'match_uri' => 'view=routes',
-                ],
-                [
-                    'label' => 'Bakım Takvimi',
-                    'href'  => '../public/vehicle.php?view=maintenance',
-                    'match_uri' => 'view=maintenance',
-                ],
-            ],
-        ],
-    ],
-    'Ayarlar' => [
-        [
-            'label' => 'Hesap Ayarları',
-            'icon'  => 'bi-gear',
-            'href'  => $settingsPath,
-            'match' => 'settings.php',
-        ],
+    [
+        'label' => 'Şirket (company.cs)',
+        'icon'  => 'bi-building',
+        'href'  => '../public/company.php',
+        'match' => 'company.php',
     ],
 ];
 
 if ($role === 'admin') {
-    $menu['Ayarlar'][] = [
+    $menu[] = [
         'label' => 'Yönetim Paneli',
         'icon'  => 'bi-shield-lock',
         'href'  => '../public/admin.php',
@@ -1066,14 +1092,9 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     
     <div class="sidebar-content flex-grow-1">
-        <?php foreach ($menu as $groupTitle => $items): ?>
-            <div class="nav-group">
-                <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
-                <ul class="nav flex-column">
-                    <?= $renderMenu($items, $active, $requestUri); ?>
-                </ul>
-            </div>
-        <?php endforeach; ?>
+        <ul class="nav flex-column">
+            <?= $renderMenu($menu, $active, $requestUri); ?>
+        </ul>
     </div>
     
     <div class="sidebar-footer">
@@ -1170,14 +1191,9 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     <div class="offcanvas-body sidebar d-flex flex-column">
         <div class="flex-grow-1">
-            <?php foreach ($menu as $groupTitle => $items): ?>
-                <div class="nav-group">
-                    <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
-                    <ul class="nav flex-column">
-                        <?= $renderMenu($items, $active, $requestUri); ?>
-                    </ul>
-                </div>
-            <?php endforeach; ?>
+            <ul class="nav flex-column">
+                <?= $renderMenu($menu, $active, $requestUri); ?>
+            </ul>
         </div>
         <div class="sidebar-footer">
           <div class="dropdown w-100 account-dropdown">
