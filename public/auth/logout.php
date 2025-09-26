@@ -67,7 +67,16 @@ if (!verifyCsrfToken((string) $csrfTokenFromPost)) {
     exit('Geçersiz CSRF doğrulaması.');
 }
 
-unset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['remember_token']);
+unset(
+    $_SESSION['user_id'],
+    $_SESSION['username'],
+    $_SESSION['remember_token'],
+    $_SESSION['role'],
+    $_SESSION['roles'],
+    $_SESSION['user_role'],
+    $_SESSION['permissions'],
+    $_SESSION['is_admin']
+);
 
 session_unset();
 session_destroy();

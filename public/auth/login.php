@@ -61,6 +61,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int) $user['id'];
 
+            $roles       = [];
+            $permissions = [];
+            try {
+                $roleStmt = $pdo->prepare(
+                    'SELECT r.name AS role_name, p.name AS permission_key
+                    FROM user_roles ur
+                    JOIN roles r ON ur.role_id = r.id
+                    LEFT JOIN role_permissions rp ON rp.role_id = r.id AND rp.granted = 1
+                    LEFT JOIN permissions p ON p.id = rp.permission_id
+                    WHERE ur.user_id = :user_id
+                    ORDER BY r.id ASC, p.id ASC'
+                );
+                $roleStmt->execute([
+                    ':user_id' => $user['id'],
+                ]);
+                $roleRows = $roleStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($roleRows as $row) {
+                    $roleName = trim((string) ($row['role_name'] ?? ''));
+                    if ($roleName !== '' && !in_array($roleName, $roles, true)) {
+                        $roles[] = $roleName;
+                    }
+
+                    $permissionKey = trim((string) ($row['permission_key'] ?? ''));
+                    if ($permissionKey !== '' && !in_array($permissionKey, $permissions, true)) {
+                        $permissions[] = $permissionKey;
+                    }
+                }
+            } catch (Throwable $e) {
+                $roles = [];
+                $permissions = [];
+            }
+
+            if ($roles === []) {
+                $roles[] = 'user';
+            }
+
+            $primaryRole = $roles[0];
+            $normalizedRoles = array_map(static function ($value): string {
+                return strtolower((string) $value);
+            }, $roles);
+
+            $_SESSION['roles']       = array_values($roles);
+            $_SESSION['role']        = $primaryRole;
+            $_SESSION['permissions'] = array_values($permissions);
+            $_SESSION['is_admin']    = in_array('admin', $normalizedRoles, true);
+            $_SESSION['user_role']   = $primaryRole;
+
             if ($remember) {
                 setcookie('remember_user', (string) $user['id'], time() + (60 * 60 * 24 * 30), '/', '', false, true);
             }

@@ -37,19 +37,42 @@ $active = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
-$role = 'user';
 
-if ($userId > 0) {
-    try {
-        $stmt = $pdo->prepare('SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = :id LIMIT 1');
-        $stmt->execute(['id' => $userId]);
-        $dbRole = $stmt->fetchColumn();
-        if (is_string($dbRole) && $dbRole !== '') {
-            $role = $dbRole;
-        }
-    } catch (Throwable $e) {
-        $role = 'user';
+$sessionRoles = $_SESSION['roles'] ?? [];
+if (!is_array($sessionRoles)) {
+    $sessionRoles = [];
+}
+
+$roles = [];
+foreach ($sessionRoles as $sessionRole) {
+    $roleName = trim((string) $sessionRole);
+    if ($roleName === '' || in_array($roleName, $roles, true)) {
+        continue;
     }
+    $roles[] = $roleName;
+}
+
+$role = 'user';
+if (isset($_SESSION['role']) && is_string($_SESSION['role'])) {
+    $roleCandidate = trim($_SESSION['role']);
+    if ($roleCandidate !== '') {
+        $role = $roleCandidate;
+    }
+}
+if ($role === 'user' && $roles !== []) {
+    $role = $roles[0];
+}
+
+$normalizedRoles = array_map(static function ($value): string {
+    return strtolower((string) $value);
+}, $roles === [] ? [$role] : array_merge([$role], $roles));
+
+$isAdmin = false;
+if (isset($_SESSION['is_admin'])) {
+    $isAdmin = filter_var($_SESSION['is_admin'], FILTER_VALIDATE_BOOLEAN);
+}
+if (!$isAdmin && in_array('admin', $normalizedRoles, true)) {
+    $isAdmin = true;
 }
 
 $userFullname = 'Kullanıcı';
@@ -278,7 +301,7 @@ $menuGroups = [
     ],
 ];
 
-if ($role === 'admin') {
+if ($isAdmin) {
     $menuGroups[] = [
         'title' => 'Yönetim',
         'items' => [
@@ -1247,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <i class="bi bi-gear"></i> Hesap Ayarları
                 </a>
               </li>
-              <?php if ($role === 'admin'): ?>
+              <?php if ($isAdmin): ?>
               <li>
                 <a class="dropdown-item small d-flex align-items-center gap-2" href="../public/admin.php">
                   <i class="bi bi-shield-lock"></i> Yönetim Paneli
@@ -1364,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <i class="bi bi-gear"></i> Hesap Ayarları
                 </a>
               </li>
-              <?php if ($role === 'admin'): ?>
+              <?php if ($isAdmin): ?>
               <li>
                 <a class="dropdown-item small d-flex align-items-center gap-2" href="../public/admin.php">
                   <i class="bi bi-shield-lock"></i> Yönetim Paneli
