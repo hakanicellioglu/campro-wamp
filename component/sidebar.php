@@ -1147,6 +1147,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Mobile Offcanvas -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" data-powered-by="Claude Code">
     <div class="offcanvas-header">
+        <h5 class="offcanvas-title visually-hidden" id="sidebarOffcanvasLabel">Menü</h5>
         <div>
             <span class="sidebar-logo">NEXA</span>
             <div class="sidebar-subtitle">Panel</div>
