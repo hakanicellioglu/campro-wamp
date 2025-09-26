@@ -139,10 +139,15 @@ try {
         ':id'      => $companyId,
     ]);
 
+    http_response_code(303);
+    header('Location: ../company.php');
+
     echo json_encode([
-        'status' => 'success',
-        'message' => 'Şirket bilgileri güncellendi.'
+        'status'   => 'success',
+        'message'  => 'Şirket bilgileri güncellendi.',
+        'redirect' => '../company.php',
     ], JSON_UNESCAPED_UNICODE);
+    exit;
 } catch (PDOException $e) {
     error_log('Company update failed: ' . $e->getMessage());
 

@@ -105,12 +105,18 @@ try {
         ':fax'     => $input['fax'] !== '' ? $input['fax'] : null,
     ]);
 
-    http_response_code(201);
+    $newId = (int) $pdo->lastInsertId();
+
+    http_response_code(303);
+    header('Location: ../company.php');
+
     echo json_encode([
         'status' => 'success',
         'message' => 'Şirket kaydı oluşturuldu.',
-        'id'      => (int) $pdo->lastInsertId(),
+        'id'      => $newId,
+        'redirect' => '../company.php',
     ], JSON_UNESCAPED_UNICODE);
+    exit;
 } catch (PDOException $e) {
     error_log('Company add failed: ' . $e->getMessage());
 
