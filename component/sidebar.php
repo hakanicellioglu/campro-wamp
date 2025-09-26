@@ -13,6 +13,26 @@ if (empty($_SESSION['csrf_token'])) {
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../assets/fonts/monoton.php';
 
+$companyName = 'şirket';
+$hasCompany  = false;
+$hasLogo     = file_exists(__DIR__ . '/../assets/images/company-logo.png');
+
+try {
+    $stmt = $pdo->prepare('SELECT id, name FROM companies ORDER BY id ASC LIMIT 1');
+    $stmt->execute();
+    $companyRow = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (is_array($companyRow)) {
+        $hasCompany = true;
+        $name = trim((string)($companyRow['name'] ?? ''));
+        if ($name !== '') {
+            $companyName = $name;
+        }
+    }
+} catch (Throwable $e) {
+    $hasCompany = false;
+    $companyName = 'şirket';
+}
+
 $active = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
@@ -135,101 +155,146 @@ $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.ph
 $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
 
-$menu = [
-    'Genel' => [
-        [
-            'label' => 'Dashboard',
-            'icon'  => 'bi-speedometer2',
-            'href'  => '../public/dashboard.php',
-            'match' => 'dashboard.php',
-        ],
-        [
-            'label'     => 'Siparişler',
-            'icon'      => 'bi-receipt',
-            'href'      => $orderPath,
-            'match'     => $orderMatch,
-            'match_uri' => $orderMatch,
-            'children'  => [
-                [
-                    'label' => 'Aktif Siparişler',
-                    'href'  => $orderPath . '?view=active',
-                    'match_uri' => 'view=active',
-                ],
-                [
-                    'label' => 'Arşiv',
-                    'href'  => $orderPath . '?view=archived',
-                    'match_uri' => 'view=archived',
-                ],
+$vehicleExists = file_exists(__DIR__ . '/../public/vehicle.php');
+$vehicleHref = $vehicleExists ? '../public/vehicle.php' : '#';
+
+$shipmentFile = null;
+foreach (['shipment.php', 'shipments.php', 'sevkiyat.php'] as $candidate) {
+    if (file_exists(__DIR__ . '/../public/' . $candidate)) {
+        $shipmentFile = $candidate;
+        break;
+    }
+}
+
+$projectFile = null;
+foreach (['projects.php', 'project.php', 'proje.php'] as $candidate) {
+    if (file_exists(__DIR__ . '/../public/' . $candidate)) {
+        $projectFile = $candidate;
+        break;
+    }
+}
+
+$menuGroups = [
+    [
+        'title' => 'Genel',
+        'items' => [
+            [
+                'label' => 'Dashboard',
+                'icon'  => 'bi-speedometer2',
+                'href'  => '../public/dashboard.php',
+                'match' => 'dashboard.php',
             ],
-        ],
-        [
-            'label' => 'Ürünler',
-            'icon'  => 'bi-box',
-            'href'  => '../public/product.php',
-            'match' => 'product.php',
-        ],
-        [
-            'label' => 'Fiyatlar',
-            'icon'  => 'bi-cash-coin',
-            'href'  => '../public/price.php',
-            'match' => 'price.php',
-        ],
-    ],
-    'Tedarik' => [
-        [
-            'label' => 'Tedarikçiler',
-            'icon'  => 'bi-people',
-            'href'  => '../public/supplier.php',
-            'match' => 'supplier.php',
-        ],
-        [
-            'label' => 'Tedarikçi İletişim',
-            'icon'  => 'bi-telephone-forward',
-            'href'  => '../public/supplier-contact.php',
-            'match' => 'supplier-contact.php',
-        ],
-        [
-            'label'     => 'Araçlar / Sevkiyat',
-            'icon'      => 'bi-truck',
-            'href'      => '../public/vehicle.php',
-            'match'     => 'vehicle.php',
-            'match_uri' => 'vehicle.php',
-            'children'  => [
-                [
-                    'label' => 'Planlanan Güzergah',
-                    'href'  => '../public/vehicle.php?view=routes',
-                    'match_uri' => 'view=routes',
-                ],
-                [
-                    'label' => 'Bakım Takvimi',
-                    'href'  => '../public/vehicle.php?view=maintenance',
-                    'match_uri' => 'view=maintenance',
-                ],
+            [
+                'label' => 'Ürünler',
+                'icon'  => 'bi-box',
+                'href'  => '../public/product.php',
+                'match' => 'product.php',
+            ],
+            [
+                'label' => 'Fiyatlar',
+                'icon'  => 'bi-cash-coin',
+                'href'  => '../public/price.php',
+                'match' => 'price.php',
             ],
         ],
     ],
-    'Ayarlar' => [
-        [
-            'label' => 'Hesap Ayarları',
-            'icon'  => 'bi-gear',
-            'href'  => $settingsPath,
-            'match' => 'settings.php',
+    [
+        'title' => 'Operasyon',
+        'items' => [
+            [
+                'label'     => 'Araçlar',
+                'icon'      => 'bi-truck',
+                'href'      => $vehicleHref,
+                'match'     => $vehicleExists ? 'vehicle.php' : '',
+                'match_uri' => $vehicleExists ? 'vehicle.php' : '',
+                'children'  => $vehicleExists ? [
+                    [
+                        'label' => 'Planlanan Güzergah',
+                        'href'  => '../public/vehicle.php?view=routes',
+                        'match_uri' => 'view=routes',
+                    ],
+                    [
+                        'label' => 'Bakım Takvimi',
+                        'href'  => '../public/vehicle.php?view=maintenance',
+                        'match_uri' => 'view=maintenance',
+                    ],
+                ] : [],
+            ],
+            [
+                'label'     => 'Sevkiyatlar',
+                'icon'      => 'bi-box-arrow-up-right',
+                'href'      => $shipmentFile !== null ? '../public/' . $shipmentFile : ($vehicleExists ? '../public/vehicle.php?view=shipments' : '#'),
+                'match'     => $shipmentFile !== null ? $shipmentFile : '',
+                'match_uri' => $shipmentFile !== null ? $shipmentFile : ($vehicleExists ? 'view=shipments' : ''),
+            ],
+            [
+                'label' => 'Projeler',
+                'icon'  => 'bi-kanban',
+                'href'  => $projectFile !== null ? '../public/' . $projectFile : '#',
+                'match' => $projectFile !== null ? $projectFile : '',
+            ],
+        ],
+    ],
+    [
+        'title' => 'Tedarik',
+        'items' => [
+            [
+                'label' => 'Tedarikçi',
+                'icon'  => 'bi-people',
+                'href'  => '../public/supplier.php',
+                'match' => 'supplier.php',
+            ],
+            [
+                'label' => 'Tedarikçi Yetkilisi',
+                'icon'  => 'bi-person-lines-fill',
+                'href'  => '../public/supplier-contact.php',
+                'match' => 'supplier-contact.php',
+            ],
+        ],
+    ],
+    [
+        'title' => 'Sipariş Yönetimi',
+        'items' => [
+            [
+                'label'     => 'Siparişler',
+                'icon'      => 'bi-receipt',
+                'href'      => $orderPath,
+                'match'     => $orderMatch,
+                'match_uri' => $orderMatch,
+                'children'  => [
+                    [
+                        'label' => 'Aktif Siparişler',
+                        'href'  => $orderPath . '?view=active',
+                        'match_uri' => 'view=active',
+                    ],
+                    [
+                        'label' => 'Arşiv',
+                        'href'  => $orderPath . '?view=archived',
+                        'match_uri' => 'view=archived',
+                    ],
+                ],
+            ],
         ],
     ],
 ];
 
 if ($role === 'admin') {
-    $menu['Ayarlar'][] = [
-        'label' => 'Yönetim Paneli',
-        'icon'  => 'bi-shield-lock',
-        'href'  => '../public/admin.php',
-        'match' => 'admin.php',
+    $menuGroups[] = [
+        'title' => 'Yönetim',
+        'items' => [
+            [
+                'label' => 'Yönetim Paneli',
+                'icon'  => 'bi-shield-lock',
+                'href'  => '../public/admin.php',
+                'match' => 'admin.php',
+            ],
+        ],
     ];
 }
 
 $csrfToken = $_SESSION['csrf_token'];
 
-$renderMenu = static function (array $menuItems, string $active, string $requestUri): string {
+$renderMenuItems = static function (array $menuItems, string $active, string $requestUri): string {
     $html = '';
     foreach ($menuItems as $item) {
         $isActive = $active === ($item['match'] ?? '');
@@ -315,6 +380,30 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
         $html .= '</li>';
     }
+    return $html;
+};
+
+$renderMenu = static function (array $menuGroups, string $active, string $requestUri) use ($renderMenuItems): string {
+    $html = '';
+
+    foreach ($menuGroups as $group) {
+        $items = $group['items'] ?? [];
+        if (!is_array($items) || $items === []) {
+            continue;
+        }
+
+        $title = trim((string)($group['title'] ?? ''));
+
+        $html .= '<div class="nav-group">';
+        if ($title !== '') {
+            $html .= '<div class="nav-group-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</div>';
+        }
+        $html .= '<ul class="nav flex-column nav-group-list">';
+        $html .= $renderMenuItems($items, $active, $requestUri);
+        $html .= '</ul>';
+        $html .= '</div>';
+    }
+
     return $html;
 };
 ?>
@@ -429,6 +518,48 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         letter-spacing: 0.1em;
     }
 
+    .company-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.35rem 0.5rem;
+        color: var(--ink);
+        font-size: 0.85rem;
+        background-color: var(--surface);
+        transition: var(--transition);
+    }
+
+    .company-chip:hover {
+        text-decoration: none;
+        background: var(--surface-hover);
+        color: var(--ink);
+    }
+
+    .company-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .company-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .sidebar-content {
         padding: 0.75rem;
     }
@@ -460,6 +591,11 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         right: 0.5rem;
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    .nav-group-list {
+        margin: 0;
+        padding: 0;
     }
 
     .nav-item {
@@ -1023,6 +1159,27 @@ document.addEventListener('DOMContentLoaded', function () {
         <span class="sidebar-logo">NEXA</span>
         <div class="sidebar-subtitle">Panel</div>
 
+        <div class="mt-2">
+          <a href="../public/company.php"
+             class="company-chip text-decoration-none w-100 justify-content-between position-relative"
+             aria-label="Şirket ayarları">
+            <span class="d-inline-flex align-items-center gap-2">
+              <?php if ($hasLogo): ?>
+                <img src="../assets/images/company-logo.png" class="company-logo" alt="<?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>">
+              <?php else: ?>
+                <i class="bi bi-building" aria-hidden="true"></i>
+              <?php endif; ?>
+              <span class="text-truncate" style="max-width: 140px;">
+                <?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>
+              </span>
+            </span>
+            <i class="bi bi-gear" aria-hidden="true"></i>
+            <?php if (!$hasCompany): ?>
+              <span class="company-badge" title="Şirket kurulumu gerekli">!</span>
+            <?php endif; ?>
+          </a>
+        </div>
+
         <!-- SAĞ ÜST AKSİYONLAR -->
         <div class="header-actions">
           <!-- Bildirim butonu -->
@@ -1066,14 +1223,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     
     <div class="sidebar-content flex-grow-1">
-        <?php foreach ($menu as $groupTitle => $items): ?>
-            <div class="nav-group">
-                <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
-                <ul class="nav flex-column">
-                    <?= $renderMenu($items, $active, $requestUri); ?>
-                </ul>
-            </div>
-        <?php endforeach; ?>
+        <?= $renderMenu($menuGroups, $active, $requestUri); ?>
     </div>
     
     <div class="sidebar-footer">
@@ -1126,9 +1276,30 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Mobile Offcanvas -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" data-powered-by="Claude Code">
     <div class="offcanvas-header">
+        <h5 class="offcanvas-title visually-hidden" id="sidebarOffcanvasLabel">Menü</h5>
         <div>
             <span class="sidebar-logo">NEXA</span>
             <div class="sidebar-subtitle">Panel</div>
+            <div class="mt-2">
+              <a href="../public/company.php"
+                 class="company-chip text-decoration-none w-100 justify-content-between position-relative"
+                 aria-label="Şirket ayarları">
+                <span class="d-inline-flex align-items-center gap-2">
+                  <?php if ($hasLogo): ?>
+                    <img src="../assets/images/company-logo.png" class="company-logo" alt="<?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>">
+                  <?php else: ?>
+                    <i class="bi bi-building" aria-hidden="true"></i>
+                  <?php endif; ?>
+                  <span class="text-truncate" style="max-width: 140px;">
+                    <?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>
+                  </span>
+                </span>
+                <i class="bi bi-gear" aria-hidden="true"></i>
+                <?php if (!$hasCompany): ?>
+                  <span class="company-badge" title="Şirket kurulumu gerekli">!</span>
+                <?php endif; ?>
+              </a>
+            </div>
         </div>
 
         <div class="d-inline-flex align-items-center gap-2">
@@ -1170,14 +1341,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     <div class="offcanvas-body sidebar d-flex flex-column">
         <div class="flex-grow-1">
-            <?php foreach ($menu as $groupTitle => $items): ?>
-                <div class="nav-group">
-                    <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
-                    <ul class="nav flex-column">
-                        <?= $renderMenu($items, $active, $requestUri); ?>
-                    </ul>
-                </div>
-            <?php endforeach; ?>
+            <?= $renderMenu($menuGroups, $active, $requestUri); ?>
         </div>
         <div class="sidebar-footer">
           <div class="dropdown w-100 account-dropdown">
