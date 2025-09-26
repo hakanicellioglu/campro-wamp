@@ -318,29 +318,13 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     return $html;
 };
 ?>
+<link rel="stylesheet" href="../assets/css/root.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --sidebar-bg: #ffffff;
-        --sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --ink: #1a1a1a;
-        --ink-light: #374151;
-        --ink-lighter: #6b7280;
-        --ink-lightest: #9ca3af;
-        --surface: #f8fafc;
-        --surface-hover: #f1f5f9;
-        --border: #e5e7eb;
-        --accent-blue: #3b82f6;
-        --accent-purple: #8b5cf6;
-        --success: #10b981;
-        --danger: #ef4444;
-        --radius: 12px;
-        --radius-lg: 16px;
         --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -587,7 +571,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .submenu-link.active {
-        background: rgba(102, 126, 234, 0.12);
+        background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
         color: var(--ink);
         font-weight: 600;
     }
@@ -599,14 +583,18 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .sidebar .nav-link.active {
         color: var(--ink);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-        border-color: rgba(102, 126, 234, 0.3);
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--brand-primary) 12%, transparent),
+            color-mix(in srgb, var(--brand-primary-dark) 12%, transparent)
+        );
+        border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent);
         font-weight: 600;
         transform: translateX(4px);
     }
 
     .sidebar .nav-link.active .nav-icon {
-        color: #667eea;
+        color: var(--brand-primary);
         transform: scale(1.1);
     }
 
@@ -676,7 +664,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .account-dropdown .meta .username {
         font-size: 0.75rem;
-        color: var(--muted, #64748b);
+        color: var(--muted);
     }
 
     .account-dropdown .dropdown-menu {
@@ -691,7 +679,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .account-dropdown .dropdown-item.text-danger {
-        color: #ef4444 !important;
+        color: var(--brand-danger) !important;
     }
 
     .account-dropdown .dropdown-divider {
@@ -864,8 +852,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         width: 8px;
         height: 8px;
         border-radius: 999px;
-        background: #ef4444;
-        box-shadow: 0 0 0 2px #fff;
+        background: var(--brand-danger);
+        box-shadow: 0 0 0 2px var(--brand-surface-strong);
         display: none;
     }
 

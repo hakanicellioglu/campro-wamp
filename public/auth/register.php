@@ -119,18 +119,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nexa — Kayıt Ol</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/root.css">
     <?php require_once __DIR__ . '/../../assets/fonts/monoton.php'; ?>
     <style>
         :root {
-            --ink: #0f1419;
-            --muted: #536471;
-            --line: #e6e6e6;
+            --ink: var(--brand-ink);
+            --muted: var(--brand-ink-lighter);
+            --line: var(--brand-border);
             --radius: 14px;
         }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-            background: #fff;
+            background: var(--surface);
             color: var(--ink);
         }
 
@@ -157,6 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: "Monoton", sans-serif;
             font-size: 3rem;
             letter-spacing: 0.05em;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .panel {
@@ -181,6 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             align-items: center;
             border: none;
+            background: var(--surface);
+            box-shadow: var(--shadow-lg);
         }
 
         .form-control,
@@ -192,6 +199,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: var(--radius);
             padding: .75rem 1rem;
             font-weight: 600;
+            background: var(--primary-gradient);
+            border: none;
+        }
+
+        .btn-dark:hover,
+        .btn-dark:focus {
+            background: var(--secondary-gradient);
+            color: #fff;
         }
 
         @media (max-width:992px) {

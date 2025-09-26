@@ -100,38 +100,20 @@ if (!empty($_GET['flash'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nexa — Yönetim Paneli</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/root.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <?php require_once __DIR__ . '/../assets/fonts/monoton.php'; ?>
     <style>
-        :root {
-            --nexa-primary: #2563eb;
-            --nexa-primary-dark: #1d4ed8;
-            --nexa-secondary: #64748b;
-            --nexa-success: #10b981;
-            --nexa-warning: #f59e0b;
-            --nexa-danger: #ef4444;
-            --nexa-info: #06b6d4;
-            --nexa-bg-light: #f8fafc;
-            --nexa-bg-white: #ffffff;
-            --nexa-border: #e2e8f0;
-            --nexa-text-primary: #0f172a;
-            --nexa-text-secondary: #64748b;
-            --nexa-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --nexa-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --nexa-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --nexa-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
-
         * {
             box-sizing: border-box;
         }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background: linear-gradient(135deg, var(--nexa-bg-light) 0%, color-mix(in srgb, var(--nexa-bg-light) 60%, var(--nexa-bg-white)) 100%);
             min-height: 100vh;
             color: var(--nexa-text-primary);
         }
@@ -230,17 +212,17 @@ if (!empty($_GET['flash'])) {
 
         .stat-card.orders-pending {
             --stat-color: var(--nexa-warning);
-            --stat-color-dark: #d97706;
+            --stat-color-dark: color-mix(in srgb, var(--nexa-warning) 75%, black);
         }
 
         .stat-card.ship-today {
             --stat-color: var(--nexa-info);
-            --stat-color-dark: #0891b2;
+            --stat-color-dark: color-mix(in srgb, var(--nexa-info) 75%, black);
         }
 
         .stat-card.price-catalogue {
             --stat-color: var(--nexa-success);
-            --stat-color-dark: #059669;
+            --stat-color-dark: color-mix(in srgb, var(--nexa-success) 70%, black);
         }
 
         .stat-card .stat-icon {
@@ -290,7 +272,7 @@ if (!empty($_GET['flash'])) {
         }
 
         .table-card-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            background: linear-gradient(135deg, var(--nexa-bg-light) 0%, color-mix(in srgb, var(--nexa-bg-light) 75%, var(--nexa-bg-white)) 100%);
             padding: 1.1rem 1.5rem;
             border-bottom: 1px solid var(--nexa-border);
         }
@@ -314,17 +296,17 @@ if (!empty($_GET['flash'])) {
             letter-spacing: 0.05em;
             border-bottom: 2px solid var(--nexa-border);
             padding: 0.75rem;
-            background: #f8fafc;
+            background: var(--nexa-bg-light);
         }
 
         .table tbody td {
             padding: 0.75rem;
             vertical-align: middle;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid color-mix(in srgb, var(--nexa-border) 70%, transparent);
         }
 
         .table tbody tr:hover {
-            background: #f8fafc;
+            background: var(--nexa-bg-light);
         }
 
         /* Enhanced Aside Cards */
@@ -337,7 +319,7 @@ if (!empty($_GET['flash'])) {
         }
 
         .aside-card-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            background: linear-gradient(135deg, var(--nexa-bg-light) 0%, color-mix(in srgb, var(--nexa-bg-light) 75%, var(--nexa-bg-white)) 100%);
             padding: 1.1rem;
             border-bottom: 1px solid var(--nexa-border);
         }
@@ -353,13 +335,13 @@ if (!empty($_GET['flash'])) {
 
         .activity-list .list-group-item {
             border: none;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid color-mix(in srgb, var(--nexa-border) 70%, transparent);
             padding: 0.75rem 1.1rem;
             transition: background-color 0.2s ease;
         }
 
         .activity-list .list-group-item:hover {
-            background: #f8fafc;
+            background: var(--nexa-bg-light);
         }
 
         .activity-list .list-group-item:last-child {
@@ -420,7 +402,7 @@ if (!empty($_GET['flash'])) {
         }
 
         .badge.text-bg-light {
-            background: #f1f5f9 !important;
+            background: var(--nexa-bg-light) !important;
             color: var(--nexa-text-secondary) !important;
             border: 1px solid var(--nexa-border);
         }

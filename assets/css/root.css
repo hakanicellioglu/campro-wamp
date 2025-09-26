@@ -1,0 +1,70 @@
+/**
+ * Nexa global brand tokens.
+ * Centralizes the color palette used across the application so that
+ * components share a consistent visual identity.
+ */
+:root {
+    --brand-primary: #667eea;
+    --brand-primary-dark: #764ba2;
+    --brand-secondary: #f093fb;
+    --brand-secondary-dark: #f5576c;
+    --brand-surface: #f8fafc;
+    --brand-surface-strong: #ffffff;
+    --brand-surface-hover: #f1f5f9;
+    --brand-border: #e5e7eb;
+    --brand-ink: #1a1a1a;
+    --brand-ink-light: #374151;
+    --brand-ink-lighter: #6b7280;
+    --brand-ink-lightest: #9ca3af;
+    --brand-accent-blue: #3b82f6;
+    --brand-accent-purple: #8b5cf6;
+    --brand-success: #10b981;
+    --brand-danger: #ef4444;
+    --brand-warning: #f59e0b;
+    --brand-info: #06b6d4;
+
+    --primary-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+    --secondary-gradient: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-secondary-dark) 100%);
+
+    --sidebar-bg: var(--brand-surface-strong);
+    --sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+    --surface: var(--brand-surface-strong);
+    --surface-elevated: var(--brand-surface-strong);
+    --surface-hover: var(--brand-surface-hover);
+    --border: var(--brand-border);
+    --border-light: var(--brand-border);
+
+    --ink: var(--brand-ink);
+    --ink-light: var(--brand-ink-light);
+    --ink-lighter: var(--brand-ink-lighter);
+    --ink-lightest: var(--brand-ink-lightest);
+    --ink-secondary: var(--brand-ink-lighter);
+    --muted: var(--brand-ink-lighter);
+    --line: var(--brand-border);
+
+    --radius: 12px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.08);
+    --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.06);
+
+    --nexa-primary: var(--brand-primary);
+    --nexa-primary-dark: var(--brand-primary-dark);
+    --nexa-secondary: var(--brand-ink-lighter);
+    --nexa-success: var(--brand-success);
+    --nexa-warning: var(--brand-warning);
+    --nexa-danger: var(--brand-danger);
+    --nexa-info: var(--brand-info);
+    --nexa-bg-light: var(--brand-surface);
+    --nexa-bg-white: var(--brand-surface-strong);
+    --nexa-border: var(--brand-border);
+    --nexa-text-primary: var(--brand-ink);
+    --nexa-text-secondary: var(--brand-ink-lighter);
+    --nexa-shadow-sm: var(--shadow-sm);
+    --nexa-shadow: var(--shadow-md);
+    --nexa-shadow-lg: var(--shadow-lg);
+    --nexa-shadow-xl: var(--shadow-xl);
+}

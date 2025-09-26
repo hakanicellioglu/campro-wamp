@@ -14,30 +14,35 @@ if (!empty($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Nexa</title>
+    <link rel="stylesheet" href="assets/css/root.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Monoton&display=swap" rel="stylesheet">
     <style>
         body {
-            background: #f8f9fa;
+            background: var(--brand-surface);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
+            color: var(--ink);
         }
 
         .row.w-100 {
-            max-width: 800px;
-            background: #f8f9fa;
+            max-width: 860px;
+            background: var(--brand-surface);
             margin: 0 auto;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
         }
 
         .left-box {
-            background: #f8f9fa;
-            color: #212529;
-            padding: 40px 20px;
+            background: var(--primary-gradient);
+            color: #ffffff;
+            padding: 48px 24px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -48,27 +53,32 @@ if (!empty($_SESSION['user_id'])) {
             font-family: "Monoton", sans-serif;
             font-size: 4rem;
             letter-spacing: 5px;
-            color: #212529;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
         }
 
         .right-box {
-            padding: 40px;
+            padding: 48px 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: #f8f9fa;
-            /* Sağ kutu da arka plana karışsın */
+            gap: 1.25rem;
+            background: var(--surface);
         }
 
         .right-box h5 {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: .5rem;
-            color: #212529;
+            color: var(--ink);
         }
 
         .right-box p.text-muted {
             margin-bottom: 1.5rem;
+            color: var(--ink-lighter) !important;
         }
 
         .btn-custom {
@@ -79,22 +89,32 @@ if (!empty($_SESSION['user_id'])) {
         }
 
         .btn-dark {
-            background-color: #212529;
+            background: var(--primary-gradient);
             border: none;
+            color: #ffffff;
         }
 
         .btn-outline-dark {
             border-width: 2px;
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+        }
+
+        .btn-outline-dark:hover,
+        .btn-outline-dark:focus {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            border-color: transparent;
         }
 
         .terms {
             font-size: 0.8rem;
             margin-top: 20px;
-            color: #6c757d;
+            color: var(--ink-lightest);
         }
 
         .terms a {
-            color: #495057;
+            color: var(--brand-primary);
             text-decoration: underline;
         }
     </style>

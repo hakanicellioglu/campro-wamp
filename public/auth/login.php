@@ -80,24 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nexa — Giriş Yap</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/root.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <?php require_once __DIR__ . '/../../assets/fonts/monoton.php'; ?>
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --surface: #ffffff;
-            --surface-elevated: #ffffff;
-            --ink: #1a1a1a;
-            --ink-secondary: #6b7280;
+            --surface: var(--brand-surface-strong);
+            --surface-elevated: var(--brand-surface-strong);
+            --ink: var(--brand-ink);
+            --ink-secondary: var(--brand-ink-lighter);
             --border: rgba(255, 255, 255, 0.1);
-            --border-light: #e5e7eb;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --border-light: var(--brand-border);
             --radius: 16px;
             --radius-lg: 24px;
         }
@@ -108,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 50%, var(--brand-secondary) 100%);
             background-attachment: fixed;
             color: var(--ink);
             min-height: 100vh;
@@ -178,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: "Monoton", sans-serif;
             font-size: 4.5rem;
             letter-spacing: 0.05em;
-            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            background: linear-gradient(135deg, var(--brand-surface-strong), var(--brand-surface));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -281,19 +276,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .alert-success {
             background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             color: #065f46;
-            border-left: 4px solid #10b981;
+            border-left: 4px solid var(--brand-success);
         }
 
         .alert-danger {
             background: linear-gradient(135deg, #fee2e2, #fca5a5);
             color: #991b1b;
-            border-left: 4px solid #ef4444;
+            border-left: 4px solid var(--brand-danger);
         }
 
         .alert-warning {
             background: linear-gradient(135deg, #fef3c7, #fcd34d);
             color: #92400e;
-            border-left: 4px solid #f59e0b;
+            border-left: 4px solid var(--brand-warning);
         }
 
         .form-label {
@@ -316,14 +311,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 20%, transparent);
             transform: translateY(-2px);
         }
 
         .form-control.is-invalid {
-            border-color: #ef4444;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            border-color: var(--brand-danger);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-danger) 20%, transparent);
         }
 
         .invalid-feedback {
@@ -349,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .form-check-input:checked {
             background: var(--primary-gradient);
-            border-color: #667eea;
+            border-color: var(--brand-primary);
         }
 
         .form-check-label {
@@ -383,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px color-mix(in srgb, var(--brand-primary) 35%, transparent);
         }
 
         .btn-primary:hover::before {
@@ -391,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .btn-primary:focus {
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 30%, transparent);
         }
 
         .login-link {
@@ -402,14 +397,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .login-link a {
-            color: #667eea;
+            color: var(--brand-primary);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.2s ease;
         }
 
         .login-link a:hover {
-            color: #5a67d8;
+            color: var(--brand-primary-dark);
             text-decoration: underline;
         }
 
