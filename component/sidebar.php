@@ -888,13 +888,44 @@ document.addEventListener('DOMContentLoaded', function () {
             <?php endforeach; ?>
         </div>
         <div class="sidebar-footer">
-            <form action="../public/auth/logout.php" method="post">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn-logout">
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    Çıkış Yap
+            <div class="dropdown w-100 account-dropdown">
+                <button class="btn w-100 d-flex align-items-center justify-content-between"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .7rem;">
+                    <span class="d-inline-flex align-items-center gap-2 text-start">
+                        <span class="avatar-circle"><?= htmlspecialchars($userInitials, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="meta d-inline-flex flex-column">
+                            <span class="name"><?= htmlspecialchars($userFullname, ENT_QUOTES, 'UTF-8') ?></span>
+                            <span class="username">@<?= htmlspecialchars($userUsername, ENT_QUOTES, 'UTF-8') ?></span>
+                        </span>
+                    </span>
+                    <i class="bi bi-chevron-down chev"></i>
                 </button>
-            </form>
+
+                <ul class="dropdown-menu account-menu w-100">
+                    <li>
+                        <a class="dropdown-item small d-flex align-items-center gap-2" href="<?= htmlspecialchars($settingsPath, ENT_QUOTES, 'UTF-8') ?>">
+                            <i class="bi bi-gear"></i> Hesap Ayarları
+                        </a>
+                    </li>
+                    <?php if ($role === 'admin'): ?>
+                    <li>
+                        <a class="dropdown-item small d-flex align-items-center gap-2" href="../public/admin.php">
+                            <i class="bi bi-shield-lock"></i> Yönetim Paneli
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="../public/auth/logout.php" method="post" class="px-2">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                            <button type="submit" class="dropdown-item small d-flex align-items-center gap-2 text-danger">
+                                <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
