@@ -88,9 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Kayıt
     if (!$errors) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $ins = $pdo->prepare('INSERT INTO users (firstname, surname, email, username, password) 
+        $ins  = $pdo->prepare('INSERT INTO users (firstname, surname, email, username, password)
                               VALUES (:firstname, :surname, :email, :username, :password)');
+
         try {
+            $pdo->beginTransaction();
+
             $ins->execute([
                 ':firstname' => $firstname,
                 ':surname'   => $surname,
@@ -98,15 +101,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':username'  => $username,
                 ':password'  => $hash,
             ]);
+
+            $userId = (int) $pdo->lastInsertId();
+
+            $roleStmt = $pdo->prepare('SELECT id FROM roles WHERE name = :name LIMIT 1');
+            $roleStmt->execute([':name' => 'user']);
+            $roleId = $roleStmt->fetchColumn();
+
+            if (!$roleId) {
+                throw new RuntimeException('Varsayılan kullanıcı rolü bulunamadı.');
+            }
+
+            $roleInsert = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)');
+            $roleInsert->execute([
+                ':user_id' => $userId,
+                ':role_id' => (int) $roleId,
+            ]);
+
+            $pdo->commit();
+
             $_SESSION['flash_success'] = 'Kayıt tamamlandı. Şimdi giriş yapabilirsiniz.';
             header('Location: login.php');
             exit;
         } catch (PDOException $e) {
-            if (isset($e->errorInfo[1]) && (int)$e->errorInfo[1] === 1062) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            if (isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062) {
                 $errors['global'] = 'E-posta veya kullanıcı adı zaten kayıtlı.';
             } else {
                 $errors['global'] = 'Bir hata oluştu. Lütfen tekrar deneyin.';
             }
+        } catch (RuntimeException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $errors['global'] = $e->getMessage();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            $errors['global'] = 'Bir hata oluştu. Lütfen tekrar deneyin.';
         }
     }
 }
