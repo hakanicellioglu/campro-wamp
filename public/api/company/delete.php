@@ -116,11 +116,27 @@ foreach ($adminFlags as $flag) {
     }
 }
 
-if (!$isPrivileged && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+if (!$isPrivileged && isset($_SESSION['roles']) && is_array($_SESSION['roles'])) {
+    $roleList = [];
+    foreach ($_SESSION['roles'] as $roleValue) {
+        $roleName = strtolower(trim((string) $roleValue));
+        if ($roleName === '') {
+            continue;
+        }
+        if (!in_array($roleName, $roleList, true)) {
+            $roleList[] = $roleName;
+        }
+    }
+    if (in_array('admin', $roleList, true)) {
+        $isPrivileged = true;
+    }
+}
+
+if (!$isPrivileged && isset($_SESSION['user_role']) && strtolower((string) $_SESSION['user_role']) === 'admin') {
     $isPrivileged = true;
 }
 
-if (!$isPrivileged && isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+if (!$isPrivileged && isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin') {
     $isPrivileged = true;
 }
 
