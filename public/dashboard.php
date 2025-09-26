@@ -144,10 +144,10 @@ if (!empty($_GET['flash'])) {
         /* Welcome Section */
         .welcome-section {
             background: linear-gradient(135deg, var(--nexa-primary) 0%, var(--nexa-primary-dark) 100%);
-            border-radius: 24px;
+            border-radius: 20px;
             color: white;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
         }
@@ -157,8 +157,8 @@ if (!empty($_GET['flash'])) {
             position: absolute;
             top: 0;
             right: 0;
-            width: 200px;
-            height: 200px;
+            width: 160px;
+            height: 160px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             transform: translate(50%, -50%);
@@ -169,8 +169,8 @@ if (!empty($_GET['flash'])) {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
             transform: translate(-30%, 30%);
@@ -182,13 +182,13 @@ if (!empty($_GET['flash'])) {
         }
 
         .welcome-section h1 {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
         .welcome-section p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             opacity: 0.9;
             margin-bottom: 0;
         }
@@ -197,8 +197,8 @@ if (!empty($_GET['flash'])) {
         .stat-card {
             background: var(--nexa-bg-white);
             border: 1px solid var(--nexa-border);
-            border-radius: 20px;
-            padding: 2rem;
+            border-radius: 18px;
+            padding: 1.5rem;
             height: 100%;
             position: relative;
             overflow: hidden;
@@ -244,60 +244,60 @@ if (!empty($_GET['flash'])) {
         }
 
         .stat-card .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
             background: linear-gradient(135deg, var(--stat-color), var(--stat-color-dark));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: white;
             box-shadow: var(--nexa-shadow);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .stat-card .stat-number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--nexa-text-primary);
             line-height: 1;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
         .stat-card .stat-label {
             color: var(--nexa-text-secondary);
             font-weight: 600;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .stat-card .stat-description {
             color: var(--nexa-text-secondary);
-            font-size: 0.875rem;
-            line-height: 1.4;
+            font-size: 0.8rem;
+            line-height: 1.3;
         }
 
         /* Enhanced Table Card */
         .table-card {
             background: var(--nexa-bg-white);
             border: 1px solid var(--nexa-border);
-            border-radius: 20px;
+            border-radius: 18px;
             overflow: hidden;
             box-shadow: var(--nexa-shadow-sm);
         }
 
         .table-card-header {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 1.5rem 2rem;
+            padding: 1.1rem 1.5rem;
             border-bottom: 1px solid var(--nexa-border);
         }
 
         .table-card-header h5 {
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             color: var(--nexa-text-primary);
             margin: 0;
         }
@@ -310,15 +310,15 @@ if (!empty($_GET['flash'])) {
             color: var(--nexa-text-secondary);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             letter-spacing: 0.05em;
             border-bottom: 2px solid var(--nexa-border);
-            padding: 1rem;
+            padding: 0.75rem;
             background: #f8fafc;
         }
 
         .table tbody td {
-            padding: 1rem;
+            padding: 0.75rem;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
         }
@@ -331,14 +331,14 @@ if (!empty($_GET['flash'])) {
         .aside-card {
             background: var(--nexa-bg-white);
             border: 1px solid var(--nexa-border);
-            border-radius: 20px;
+            border-radius: 18px;
             box-shadow: var(--nexa-shadow-sm);
             overflow: hidden;
         }
 
         .aside-card-header {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 1.5rem;
+            padding: 1.1rem;
             border-bottom: 1px solid var(--nexa-border);
         }
 
@@ -346,7 +346,7 @@ if (!empty($_GET['flash'])) {
             color: var(--nexa-text-secondary);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             letter-spacing: 0.05em;
             margin: 0;
         }
@@ -354,7 +354,7 @@ if (!empty($_GET['flash'])) {
         .activity-list .list-group-item {
             border: none;
             border-bottom: 1px solid #f1f5f9;
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1.1rem;
             transition: background-color 0.2s ease;
         }
 
@@ -368,13 +368,13 @@ if (!empty($_GET['flash'])) {
 
         /* Enhanced Quick Actions */
         .quick-actions {
-            padding: 1.5rem;
+            padding: 1.1rem;
         }
 
         .quick-actions .btn {
             border-radius: 12px;
             font-weight: 600;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -413,10 +413,10 @@ if (!empty($_GET['flash'])) {
 
         /* Enhanced Badges */
         .badge {
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
+            padding: 0.35rem 0.75rem;
+            border-radius: 40px;
             font-weight: 500;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .badge.text-bg-light {
@@ -456,19 +456,19 @@ if (!empty($_GET['flash'])) {
 
         @media (max-width: 768px) {
             .welcome-section {
-                padding: 1.5rem;
+                padding: 1.25rem;
             }
-            
+
             .welcome-section h1 {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
-            
+
             .stat-card {
-                padding: 1.5rem;
+                padding: 1.25rem;
             }
-            
+
             .stat-card .stat-number {
-                font-size: 2rem;
+                font-size: 1.75rem;
             }
         }
 
