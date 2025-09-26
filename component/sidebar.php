@@ -32,6 +32,62 @@ if ($userId > 0) {
     }
 }
 
+$userFullname = 'Kullanıcı';
+$userUsername = 'kullanici';
+$userInitials = 'K';
+
+if ($userId > 0) {
+    try {
+        $stmt = $pdo->prepare('SELECT firstname, surname, username FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $userId]);
+        $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (is_array($userRow)) {
+            $firstName = trim((string)($userRow['firstname'] ?? ''));
+            $surname = trim((string)($userRow['surname'] ?? ''));
+            $usernameValue = trim((string)($userRow['username'] ?? ''));
+
+            if ($usernameValue !== '') {
+                $userUsername = $usernameValue;
+            }
+
+            $nameParts = array_filter([$firstName, $surname], static function (string $part): bool {
+                return $part !== '';
+            });
+
+            if ($nameParts !== []) {
+                $userFullname = implode(' ', $nameParts);
+            } elseif ($userUsername !== '') {
+                $userFullname = $userUsername;
+            }
+
+            $initialsParts = [];
+            if ($firstName !== '') {
+                $initialsParts[] = function_exists('mb_substr') ? mb_substr($firstName, 0, 1, 'UTF-8') : substr($firstName, 0, 1);
+            }
+            if ($surname !== '') {
+                $initialsParts[] = function_exists('mb_substr') ? mb_substr($surname, 0, 1, 'UTF-8') : substr($surname, 0, 1);
+            }
+
+            $initials = implode('', $initialsParts);
+
+            if ($initials === '' && $userUsername !== '') {
+                $initials = function_exists('mb_substr') ? mb_substr($userUsername, 0, 1, 'UTF-8') : substr($userUsername, 0, 1);
+            }
+
+            if ($initials !== '') {
+                $userInitials = function_exists('mb_strtoupper') ? mb_strtoupper($initials, 'UTF-8') : strtoupper($initials);
+            }
+        }
+    } catch (Throwable $e) {
+        // Kullanıcı bilgileri alınamadı, varsayılan değerler kullanılacak.
+    }
+}
+
+$userUsername = $userUsername !== '' ? $userUsername : 'kullanici';
+$userFullname = $userFullname !== '' ? $userFullname : 'Kullanıcı';
+$userInitials = $userInitials !== '' ? $userInitials : 'K';
+
 $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.php' : '../public/orders.php';
 $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
@@ -539,51 +595,72 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .sidebar-footer {
-        padding: 0.5rem 0.75rem;
+        padding: 0.75rem;
         border-top: 1px solid var(--border);
         margin-top: auto;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+        background: var(--surface);
     }
 
-    .btn-logout {
-        background: linear-gradient(135deg, var(--danger), #dc2626);
-        border: none;
-        border-radius: var(--radius);
-        padding: 0.25rem 0.75rem;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: white;
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        height: 36px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+    .account-dropdown .btn {
+        color: var(--ink);
+        font-weight: 500;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0.7rem;
+    }
+
+    .account-dropdown .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: rgba(99, 102, 241, 0.12);
+        color: rgba(79, 70, 229, 1);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
     }
 
-    .btn-logout::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s ease;
+    .account-dropdown .meta .name {
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.1;
     }
 
-    .btn-logout:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    .account-dropdown .meta .username {
+        font-size: 0.75rem;
+        color: var(--muted, #64748b);
     }
 
-    .btn-logout:hover::before {
-        left: 100%;
+    .account-dropdown .dropdown-menu {
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+        padding: 0.35rem 0;
+    }
+
+    .account-dropdown .dropdown-item {
+        font-size: 0.8rem;
+    }
+
+    .account-dropdown .dropdown-item.text-danger {
+        color: #ef4444 !important;
+    }
+
+    .account-dropdown .dropdown-divider {
+        margin: 0.4rem 0;
+    }
+
+    .account-dropdown .chev {
+        transition: transform 0.2s ease;
+    }
+
+    .account-dropdown .btn[aria-expanded='true'] .chev {
+        transform: rotate(-180deg);
     }
 
     .main-with-sidebar {
@@ -852,13 +929,44 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     
     <div class="sidebar-footer">
-        <form action="../public/auth/logout.php" method="post">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-            <button type="submit" class="btn-logout">
-                <i class="bi bi-box-arrow-right me-2"></i>
-                Çıkış Yap
+        <div class="dropdown w-100 account-dropdown">
+            <button class="btn w-100 d-flex align-items-center justify-content-between"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    style="background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:.4rem .6rem;">
+              <span class="d-inline-flex align-items-center gap-2 text-start">
+                <span class="avatar-circle"><?= htmlspecialchars($userInitials, ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="meta d-inline-flex flex-column">
+                  <span class="name"><?= htmlspecialchars($userFullname, ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="username">@<?= htmlspecialchars($userUsername, ENT_QUOTES, 'UTF-8') ?></span>
+                </span>
+              </span>
+              <i class="bi bi-chevron-down chev"></i>
             </button>
-        </form>
+
+            <ul class="dropdown-menu account-menu w-100">
+              <li>
+                <a class="dropdown-item small d-flex align-items-center gap-2" href="<?= htmlspecialchars($settingsPath, ENT_QUOTES, 'UTF-8') ?>">
+                  <i class="bi bi-gear"></i> Hesap Ayarları
+                </a>
+              </li>
+              <?php if ($role === 'admin'): ?>
+              <li>
+                <a class="dropdown-item small d-flex align-items-center gap-2" href="../public/admin.php">
+                  <i class="bi bi-shield-lock"></i> Yönetim Paneli
+                </a>
+              </li>
+              <?php endif; ?>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form action="../public/auth/logout.php" method="post" class="px-2">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                  <button type="submit" class="dropdown-item small d-flex align-items-center gap-2 text-danger">
+                    <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
     </div>
 </aside>
 
@@ -888,13 +996,44 @@ document.addEventListener('DOMContentLoaded', function () {
             <?php endforeach; ?>
         </div>
         <div class="sidebar-footer">
-            <form action="../public/auth/logout.php" method="post">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn-logout">
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    Çıkış Yap
-                </button>
-            </form>
+          <div class="dropdown w-100 account-dropdown">
+            <button class="btn w-100 d-flex align-items-center justify-content-between"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    style="background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .7rem;">
+              <span class="d-inline-flex align-items-center gap-2 text-start">
+                <span class="avatar-circle"><?= htmlspecialchars($userInitials, ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="meta d-inline-flex flex-column">
+                  <span class="name"><?= htmlspecialchars($userFullname, ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="username">@<?= htmlspecialchars($userUsername, ENT_QUOTES, 'UTF-8') ?></span>
+                </span>
+              </span>
+              <i class="bi bi-chevron-down chev"></i>
+            </button>
+
+            <ul class="dropdown-menu account-menu w-100">
+              <li>
+                <a class="dropdown-item small d-flex align-items-center gap-2" href="<?= htmlspecialchars($settingsPath, ENT_QUOTES, 'UTF-8') ?>">
+                  <i class="bi bi-gear"></i> Hesap Ayarları
+                </a>
+              </li>
+              <?php if ($role === 'admin'): ?>
+              <li>
+                <a class="dropdown-item small d-flex align-items-center gap-2" href="../public/admin.php">
+                  <i class="bi bi-shield-lock"></i> Yönetim Paneli
+                </a>
+              </li>
+              <?php endif; ?>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form action="../public/auth/logout.php" method="post" class="px-2">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                  <button type="submit" class="dropdown-item small d-flex align-items-center gap-2 text-danger">
+                    <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
         </div>
     </div>
 </div>
