@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 50%, var(--brand-secondary) 100%);
+            background: linear-gradient(135deg, var(--brand-primary-dark), var(--brand-primary));
             background-attachment: fixed;
             color: var(--ink);
             min-height: 100vh;
@@ -121,9 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+                radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--brand-primary) 26%, transparent) 0%, transparent 55%),
+                radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--brand-primary-light) 28%, transparent) 0%, transparent 55%),
+                radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--brand-primary-dark) 20%, transparent) 0%, transparent 50%);
             animation: float 20s ease-in-out infinite;
             z-index: -1;
         }
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: "Monoton", sans-serif;
             font-size: 4.5rem;
             letter-spacing: 0.05em;
-            background: linear-gradient(135deg, var(--brand-surface-strong), var(--brand-surface));
+            background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary-subtle) 70%, white), var(--brand-primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -239,7 +239,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 2rem;
             letter-spacing: -0.025em;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--ink), #374151);
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--brand-primary-dark) 80%, #000),
+                color-mix(in srgb, var(--brand-primary) 80%, #000)
+            );
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -259,6 +263,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 24px;
             font-weight: 500;
             animation: slideIn 0.3s ease-out;
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--brand-primary) 12%, #ffffff),
+                color-mix(in srgb, var(--brand-primary) 24%, #ffffff)
+            );
+            color: color-mix(in srgb, var(--brand-primary-dark) 75%, #000);
+            border-left: 4px solid var(--brand-primary);
         }
 
         @keyframes slideIn {
@@ -273,22 +284,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        .alert-success {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            color: #065f46;
-            border-left: 4px solid var(--brand-success);
-        }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #fee2e2, #fca5a5);
-            color: #991b1b;
-            border-left: 4px solid var(--brand-danger);
-        }
-
+        .alert-success,
+        .alert-danger,
         .alert-warning {
-            background: linear-gradient(135deg, #fef3c7, #fcd34d);
-            color: #92400e;
-            border-left: 4px solid var(--brand-warning);
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--brand-primary) 12%, #ffffff),
+                color-mix(in srgb, var(--brand-primary) 24%, #ffffff)
+            );
+            color: color-mix(in srgb, var(--brand-primary-dark) 75%, #000);
+            border-left: 4px solid var(--brand-primary);
         }
 
         .form-label {

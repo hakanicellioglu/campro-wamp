@@ -211,18 +211,18 @@ if (!empty($_GET['flash'])) {
         }
 
         .stat-card.orders-pending {
-            --stat-color: var(--nexa-warning);
-            --stat-color-dark: color-mix(in srgb, var(--nexa-warning) 75%, black);
+            --stat-color: color-mix(in srgb, var(--nexa-primary) 80%, white);
+            --stat-color-dark: var(--nexa-primary);
         }
 
         .stat-card.ship-today {
-            --stat-color: var(--nexa-info);
-            --stat-color-dark: color-mix(in srgb, var(--nexa-info) 75%, black);
+            --stat-color: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            --stat-color-dark: color-mix(in srgb, var(--nexa-primary-dark) 85%, black);
         }
 
         .stat-card.price-catalogue {
-            --stat-color: var(--nexa-success);
-            --stat-color-dark: color-mix(in srgb, var(--nexa-success) 70%, black);
+            --stat-color: color-mix(in srgb, var(--nexa-primary) 55%, white);
+            --stat-color-dark: color-mix(in srgb, var(--nexa-primary) 75%, white);
         }
 
         .stat-card .stat-icon {
@@ -383,12 +383,13 @@ if (!empty($_GET['flash'])) {
         }
 
         .quick-actions .btn-outline-secondary {
-            border-color: var(--nexa-secondary);
-            color: var(--nexa-secondary);
+            border-color: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            color: color-mix(in srgb, var(--nexa-primary) 65%, white);
         }
 
         .quick-actions .btn-outline-secondary:hover {
-            background: var(--nexa-secondary);
+            background: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            color: white;
             transform: translateY(-2px);
             box-shadow: var(--nexa-shadow);
         }
@@ -425,7 +426,15 @@ if (!empty($_GET['flash'])) {
             transform: translateY(-1px);
         }
 
+        .btn-outline-secondary {
+            border-color: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            color: color-mix(in srgb, var(--nexa-primary) 65%, white);
+        }
+
         .btn-outline-secondary:hover {
+            background: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            border-color: color-mix(in srgb, var(--nexa-primary) 65%, white);
+            color: white;
             transform: translateY(-1px);
         }
 

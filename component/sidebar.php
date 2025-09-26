@@ -373,7 +373,11 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     .sidebar-header {
         padding: 0.5rem 0.75rem;
         border-bottom: 1px solid var(--border);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--brand-primary) 12%, transparent),
+            color-mix(in srgb, var(--brand-primary-dark) 12%, transparent)
+        );
         position: relative;
     }
 
@@ -384,7 +388,12 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         left: 0;
         right: 0;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+        background: linear-gradient(
+            90deg,
+            transparent,
+            color-mix(in srgb, var(--brand-primary) 35%, transparent),
+            transparent
+        );
     }
 
     .sidebar-logo {
@@ -475,7 +484,12 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        background: linear-gradient(
+            90deg,
+            transparent,
+            color-mix(in srgb, var(--brand-primary) 16%, transparent),
+            transparent
+        );
         transition: left 0.5s ease;
     }
 
@@ -522,9 +536,9 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .nav-item.has-children.is-active .submenu-toggle {
-        color: var(--accent-purple);
-        border-color: rgba(102, 126, 234, 0.3);
-        background: rgba(102, 126, 234, 0.08);
+        color: var(--brand-primary);
+        border-color: color-mix(in srgb, var(--brand-primary) 35%, transparent);
+        background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
     }
 
     .nav-item.has-children .submenu-toggle .bi {
@@ -578,7 +592,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .submenu-indicator {
         font-size: 1.25rem;
-        color: var(--accent-purple);
+        color: var(--brand-primary);
     }
 
     .sidebar .nav-link.active {
@@ -646,8 +660,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         width: 40px;
         height: 40px;
         border-radius: 999px;
-        background: rgba(99, 102, 241, 0.12);
-        color: rgba(79, 70, 229, 1);
+        background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+        color: var(--brand-primary-dark);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -779,7 +793,11 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .offcanvas-header {
         border-bottom: 1px solid var(--border);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--brand-primary) 12%, transparent),
+            color-mix(in srgb, var(--brand-primary-dark) 12%, transparent)
+        );
         padding: 2rem 1.5rem 1.5rem;
     }
 
