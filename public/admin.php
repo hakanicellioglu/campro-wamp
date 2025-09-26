@@ -235,6 +235,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             break;
 
+        case 'revoke_role':
+            $userId = filter_var($_POST['user_id'] ?? null, FILTER_VALIDATE_INT);
+            $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$userId || !$roleId) {
+                redirectWithFlash('error', 'Rol kaldırmak için geçerli bir kullanıcı ve rol seçmelisiniz.');
+            }
+
+            try {
+                $pdo->beginTransaction();
+
+                $assignmentStmt = $pdo->prepare(
+                    'SELECT u.firstname, u.surname, u.username, r.name AS role_name
+                     FROM user_roles ur
+                     JOIN users u ON u.id = ur.user_id
+                     JOIN roles r ON r.id = ur.role_id
+                     WHERE ur.user_id = :user_id AND ur.role_id = :role_id
+                     LIMIT 1'
+                );
+                $assignmentStmt->execute([
+                    ':user_id' => $userId,
+                    ':role_id' => $roleId,
+                ]);
+
+                $assignment = $assignmentStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($assignment === false) {
+                    $pdo->rollBack();
+                    redirectWithFlash('warning', 'Kullanıcıdan kaldırılacak rol bulunamadı.');
+                }
+
+                $deleteStmt = $pdo->prepare('DELETE FROM user_roles WHERE user_id = :user_id AND role_id = :role_id');
+                $deleteStmt->execute([
+                    ':user_id' => $userId,
+                    ':role_id' => $roleId,
+                ]);
+
+                $pdo->commit();
+
+                $fullName = trim((string) ($assignment['firstname'] ?? '') . ' ' . (string) ($assignment['surname'] ?? ''));
+                if ($fullName === '') {
+                    $fullName = (string) ($assignment['username'] ?? 'Kullanıcı');
+                }
+
+                redirectWithFlash('success', sprintf('"%s" kullanıcısından "%s" rolü kaldırıldı.', $fullName, (string) ($assignment['role_name'] ?? 'rol')));
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                error_log('Admin panel role revoke failed: ' . $e->getMessage());
+                redirectWithFlash('error', 'Rol kaldırılırken bir hata oluştu.');
+            }
+
+            break;
+
         case 'update_role':
             $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
 
@@ -334,27 +390,8 @@ $adminUsers = [];
 $roleMatrix = [];
 $usersWithoutRole = [];
 $assignableUsers = [];
+$userRoleAssignments = [];
 $recentNotifications = [];
-$criticalActions = [
-    [
-        'label' => 'Şirket Kaydını Yönet',
-        'description' => 'Şirket bilgilerini güncelleyin veya kayıtları silin.',
-        'href' => 'company.php',
-        'icon' => 'building-up'
-    ],
-    [
-        'label' => 'Fiyat Kataloğu',
-        'description' => 'Fiyat ve sözleşme kayıtlarını güncel tutun.',
-        'href' => 'price.php',
-        'icon' => 'tags'
-    ],
-    [
-        'label' => 'Sipariş Yönetimi',
-        'description' => 'Kritik sipariş ve sevkiyat adımlarını kontrol edin.',
-        'href' => 'order.php',
-        'icon' => 'clipboard-data'
-    ],
-];
 
 try {
     $stats['users_total'] = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
@@ -436,6 +473,21 @@ try {
 } catch (PDOException $e) {
     error_log('Admin panel assignable users query failed: ' . $e->getMessage());
     $assignableUsers = [];
+}
+
+try {
+    $assignmentStmt = $pdo->query(
+        'SELECT ur.user_id, ur.role_id, u.firstname, u.surname, u.username, u.email, r.name AS role_name
+         FROM user_roles ur
+         JOIN users u ON u.id = ur.user_id
+         JOIN roles r ON r.id = ur.role_id
+         ORDER BY u.firstname, u.surname, r.name
+         LIMIT 50'
+    );
+    $userRoleAssignments = $assignmentStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} catch (PDOException $e) {
+    error_log('Admin panel user role assignments query failed: ' . $e->getMessage());
+    $userRoleAssignments = [];
 }
 
 try {
@@ -577,18 +629,6 @@ function formatDate(?string $value): string
             border: 1px solid rgba(234, 88, 12, 0.2);
         }
 
-        .quick-action-card {
-            border-radius: 16px;
-            background: #ffffff;
-            border: 1px solid rgba(148, 163, 184, 0.15);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .quick-action-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(37, 99, 235, 0.3);
-        }
-
         .timeline-item {
             display: flex;
             align-items: flex-start;
@@ -627,7 +667,7 @@ function formatDate(?string $value): string
         <div class="container-fluid">
             <header class="mb-4">
                 <h1 class="h3 mb-1">Yönetim Paneli</h1>
-                <p class="text-muted mb-0">Yetki matrisini, kritik aksiyonları ve yönetici hesaplarını tek ekrandan takip edin.</p>
+                <p class="text-muted mb-0">Yetki matrisini ve yönetici hesaplarını tek ekrandan takip edin; rol atamalarını buradan yönetin.</p>
             </header>
 
             <?php if ($alerts !== []): ?>
@@ -690,7 +730,7 @@ function formatDate(?string $value): string
             </section>
 
             <section class="row g-4 mb-4">
-                <div class="col-12 col-xl-7">
+                <div class="col-12">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white d-flex align-items-center justify-content-between">
                             <div>
@@ -735,32 +775,6 @@ function formatDate(?string $value): string
                                     </table>
                                 </div>
                             <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-xl-5">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white">
-                            <h2 class="h5 mb-0">Hızlı Aksiyonlar</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <?php foreach ($criticalActions as $action): ?>
-                                    <div class="col-12">
-                                        <a class="text-decoration-none text-reset" href="<?= esc($action['href']); ?>">
-                                            <div class="quick-action-card p-3 h-100">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <h3 class="h6 mb-1"><?= esc($action['label']); ?></h3>
-                                                        <p class="text-muted mb-0 small"><?= esc($action['description']); ?></p>
-                                                    </div>
-                                                    <div class="fs-3 text-primary"><i class="bi bi-<?= esc($action['icon']); ?>"></i></div>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -951,6 +965,51 @@ function formatDate(?string $value): string
                                     </div>
                                 </form>
                                 <p class="text-muted small mb-0 mt-2">Kullanıcılara birden fazla rol atanabilir; aynı rol tekrar atanamaz.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white">
+                            <h2 class="h5 mb-0">Atanmış Rolleri Yönet</h2>
+                        </div>
+                        <div class="card-body">
+                            <?php if ($userRoleAssignments === []): ?>
+                                <p class="text-muted mb-0">Henüz herhangi bir rol ataması yapılmamış.</p>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Kullanıcı</th>
+                                                <th scope="col">Rol</th>
+                                                <th scope="col" class="text-end">İşlem</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($userRoleAssignments as $assignment): ?>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-semibold"><?= esc(formatFullname($assignment)); ?></div>
+                                                        <div class="text-muted small">@<?= esc((string) ($assignment['username'] ?? '')); ?> — <?= esc((string) ($assignment['email'] ?? '')); ?></div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary-subtle text-secondary"><?= esc((string) ($assignment['role_name'] ?? 'Rol')); ?></span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <form method="post" class="d-inline" onsubmit="return confirm('Bu rolü kullanıcıdan kaldırmak istediğinize emin misiniz?');">
+                                                            <input type="hidden" name="csrf_token" value="<?= esc($csrfToken); ?>">
+                                                            <input type="hidden" name="action" value="revoke_role">
+                                                            <input type="hidden" name="user_id" value="<?= (int) $assignment['user_id']; ?>">
+                                                            <input type="hidden" name="role_id" value="<?= (int) $assignment['role_id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Rolü Kaldır</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-muted small mt-3 mb-0">Listede en fazla 50 rol ataması gösterilir. Daha fazla kayıt için kullanıcı profillerini inceleyin.</p>
                             <?php endif; ?>
                         </div>
                     </div>
