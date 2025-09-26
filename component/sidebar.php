@@ -255,6 +255,16 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         background: var(--surface);
     }
 
+    .sidebar {
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
     #sidebar {
         width: 260px;
         height: calc(100vh - 32px);
@@ -267,9 +277,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
         z-index: 1000;
-        overflow-y: auto;
         overflow-x: hidden;
-        padding-bottom: 1rem;
+        padding-bottom: 0.75rem;
         transform: translateX(0);
         opacity: 1;
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
@@ -279,7 +288,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .sidebar-header {
-        padding: 1.25rem 1.25rem 1rem;
+        padding: 0.5rem 0.75rem;
         border-bottom: 1px solid var(--border);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
         position: relative;
@@ -297,14 +306,14 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .sidebar-logo {
         font-family: 'Monoton', cursive;
-        font-size: 2rem;
+        font-size: 1.2rem;
         letter-spacing: 0.1em;
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 0.75rem;
         animation: logoShimmer 3s ease-in-out infinite alternate;
     }
 
@@ -315,18 +324,18 @@ $renderMenu = static function (array $menuItems, string $active, string $request
 
     .sidebar-subtitle {
         color: var(--ink-lighter);
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.1em;
     }
 
     .sidebar-content {
-        padding: 1.25rem;
+        padding: 0.75rem;
     }
 
     .nav-group {
-        margin-bottom: 1.5rem;
+        margin: 0.5rem 0;
     }
 
     .nav-group:last-child {
@@ -339,8 +348,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--ink-lightest);
-        margin-bottom: 1rem;
-        padding: 0 1rem;
+        margin-bottom: 0.5rem;
+        padding: 0 0.5rem;
         position: relative;
     }
 
@@ -348,8 +357,8 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         content: '';
         position: absolute;
         bottom: -0.5rem;
-        left: 1rem;
-        right: 1rem;
+        left: 0.5rem;
+        right: 0.5rem;
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--border), transparent);
     }
@@ -358,20 +367,25 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         margin-bottom: 4px;
     }
 
-    .nav-link {
+    .sidebar .nav {
+        margin-bottom: 0.5rem;
+    }
+
+    .sidebar .nav-link {
         color: var(--ink-lighter);
         border-radius: var(--radius);
-        padding: 0.75rem 0.875rem;
+        padding: 0.35rem 0.75rem;
         transition: var(--transition);
         text-decoration: none;
         font-weight: 500;
-        font-size: 0.875rem;
+        font-size: 0.9rem;
+        line-height: 1.2;
         position: relative;
         overflow: hidden;
         border: 1px solid transparent;
     }
 
-    .nav-link::before {
+    .sidebar .nav-link::before {
         content: '';
         position: absolute;
         top: 0;
@@ -382,22 +396,22 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         transition: left 0.5s ease;
     }
 
-    .nav-link:hover {
+    .sidebar .nav-link:hover {
         color: var(--ink);
         background: var(--surface-hover);
         transform: translateX(4px);
         border-color: var(--border);
     }
 
-    .nav-link:hover::before {
+    .sidebar .nav-link:hover::before {
         left: 100%;
     }
 
-    .nav-link:hover .nav-icon {
+    .sidebar .nav-link:hover .nav-icon {
         transform: scale(1.1);
     }
 
-    .nav-link.has-children {
+    .sidebar .nav-link.has-children {
         padding-right: 2.5rem;
     }
 
@@ -484,7 +498,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         color: var(--accent-purple);
     }
 
-    .nav-link.active {
+    .sidebar .nav-link.active {
         color: var(--ink);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
         border-color: rgba(102, 126, 234, 0.3);
@@ -492,7 +506,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         transform: translateX(4px);
     }
 
-    .nav-link.active .nav-icon {
+    .sidebar .nav-link.active .nav-icon {
         color: #667eea;
         transform: scale(1.1);
     }
@@ -525,7 +539,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .sidebar-footer {
-        padding: 1.25rem;
+        padding: 0.5rem 0.75rem;
         border-top: 1px solid var(--border);
         margin-top: auto;
         background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
@@ -535,14 +549,15 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         background: linear-gradient(135deg, var(--danger), #dc2626);
         border: none;
         border-radius: var(--radius);
-        padding: 0.875rem 1.5rem;
+        padding: 0.25rem 0.75rem;
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         color: white;
         transition: var(--transition);
         position: relative;
         overflow: hidden;
         width: 100%;
+        height: 36px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         display: inline-flex;
@@ -683,29 +698,15 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         .sidebar-collapse-toggle {
             display: none;
         }
+        .sidebar .nav-link {
+            font-size: 0.85rem;
+        }
+        .sidebar .nav-group-title {
+            font-size: 0.7rem;
+        }
     }
 
-    /* Scrollbar Styling */
-    #sidebar::-webkit-scrollbar,
-    .offcanvas-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #sidebar::-webkit-scrollbar-track,
-    .offcanvas-body::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    #sidebar::-webkit-scrollbar-thumb,
-    .offcanvas-body::-webkit-scrollbar-thumb {
-        background: var(--border);
-        border-radius: 3px;
-    }
-
-    #sidebar::-webkit-scrollbar-thumb:hover,
-    .offcanvas-body::-webkit-scrollbar-thumb:hover {
-        background: var(--ink-lightest);
-    }
+    /* Scrollbars are hidden via the Claude Code compact sidebar spec */
 </style>
 
 <!-- Mobile Header -->
@@ -833,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <!-- Desktop Sidebar -->
-<aside id="sidebar" class="d-flex flex-column" data-powered-by="Claude Code">
+<aside id="sidebar" class="sidebar d-flex flex-column" data-powered-by="Claude Code">
     <div class="sidebar-header">
         <span class="sidebar-logo">NEXA</span>
         <div class="sidebar-subtitle">Panel</div>
@@ -875,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
     </div>
-    <div class="offcanvas-body d-flex flex-column">
+    <div class="offcanvas-body sidebar d-flex flex-column">
         <div class="flex-grow-1">
             <?php foreach ($menu as $groupTitle => $items): ?>
                 <div class="nav-group">
