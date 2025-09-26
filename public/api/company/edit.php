@@ -3,6 +3,29 @@ declare(strict_types=1);
 
 session_start();
 
+if (!function_exists('setFlashMessage')) {
+    function setFlashMessage(string $type, string $message): void
+    {
+        $map = [
+            'success' => 'flash_success',
+            'error'   => 'flash_error',
+            'warning' => 'flash_warning',
+        ];
+
+        if (!isset($map[$type])) {
+            return;
+        }
+
+        foreach ($map as $sessionKey) {
+            if ($sessionKey !== $map[$type]) {
+                unset($_SESSION[$sessionKey]);
+            }
+        }
+
+        $_SESSION[$map[$type]] = $message;
+    }
+}
+
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
@@ -10,6 +33,7 @@ header('Referrer-Policy: same-origin');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    setFlashMessage('error', 'Geçersiz istek yöntemi.');
     echo json_encode([
         'status' => 'error',
         'message' => 'Geçersiz istek yöntemi.'
@@ -19,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 if (empty($_SESSION['user_id'])) {
     http_response_code(401);
+    setFlashMessage('error', 'Oturum açmanız gerekiyor.');
     echo json_encode([
         'status' => 'error',
         'message' => 'Oturum açmanız gerekiyor.'
@@ -33,6 +58,7 @@ if (empty($_SESSION['csrf_token'])) {
 $csrfFromPost = (string) ($_POST['csrf_token'] ?? '');
 if (!hash_equals($_SESSION['csrf_token'], $csrfFromPost)) {
     http_response_code(400);
+    setFlashMessage('error', 'CSRF doğrulaması başarısız.');
     echo json_encode([
         'status' => 'error',
         'message' => 'CSRF doğrulaması başarısız.'
@@ -43,6 +69,7 @@ if (!hash_equals($_SESSION['csrf_token'], $csrfFromPost)) {
 $id = (string) ($_POST['id'] ?? '');
 if ($id === '' || !ctype_digit($id)) {
     http_response_code(422);
+    setFlashMessage('error', 'Geçersiz şirket kimliği.');
     echo json_encode([
         'status' => 'error',
         'message' => 'Geçersiz şirket kimliği.'
@@ -59,6 +86,7 @@ try {
     $checkStmt->execute([':id' => $companyId]);
     if ($checkStmt->fetchColumn() === false) {
         http_response_code(404);
+        setFlashMessage('error', 'Şirket kaydı bulunamadı.');
         echo json_encode([
             'status' => 'error',
             'message' => 'Şirket kaydı bulunamadı.'
@@ -68,6 +96,7 @@ try {
 } catch (PDOException $e) {
     error_log('Company edit lookup failed: ' . $e->getMessage());
     http_response_code(500);
+    setFlashMessage('error', 'Şirket kaydı doğrulanamadı.');
     echo json_encode([
         'status' => 'error',
         'message' => 'Şirket kaydı doğrulanamadı.'
@@ -117,6 +146,7 @@ if (!empty($input['address']) && mb_strlen($input['address']) > 5000) {
 
 if ($errors !== []) {
     http_response_code(422);
+    setFlashMessage('error', 'Form doğrulaması başarısız.');
     echo json_encode([
         'status' => 'error',
         'message' => 'Form doğrulaması başarısız.',
@@ -141,6 +171,7 @@ try {
 
     http_response_code(303);
     header('Location: ../company.php');
+    setFlashMessage('success', 'Şirket bilgileri güncellendi.');
 
     echo json_encode([
         'status'   => 'success',
@@ -150,6 +181,7 @@ try {
     exit;
 } catch (PDOException $e) {
     error_log('Company update failed: ' . $e->getMessage());
+    setFlashMessage('error', 'Şirket bilgileri güncellenemedi.');
 
     http_response_code(500);
     echo json_encode([
