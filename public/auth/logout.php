@@ -110,6 +110,7 @@ header('Location: ' . $redirectTarget, true, 303);
             </p>
         </noscript>
     </main>
+    <?php require_once __DIR__ . '/../component/footer.php'; ?>
 </body>
 
 </html>
