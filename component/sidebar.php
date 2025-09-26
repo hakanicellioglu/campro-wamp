@@ -91,6 +91,11 @@ $userInitials = $userInitials !== '' ? $userInitials : 'K';
 $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.php' : '../public/orders.php';
 $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
+$notificationsPath = file_exists(__DIR__ . '/../public/notifications.php') ? '../public/notifications.php' : '#';
+$notificationCount = (int)($_SESSION['notification_count'] ?? 0);
+$notificationDisplay = $notificationCount > 0
+    ? ($notificationCount > 99 ? '99+' : (string) $notificationCount)
+    : '';
 
 $menu = [
     'Genel' => [
@@ -344,7 +349,7 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     .sidebar-header {
-        padding: 0.5rem 0.75rem;
+        padding: 0.5rem 0.75rem 0.75rem;
         border-bottom: 1px solid var(--border);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
         position: relative;
@@ -384,6 +389,59 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.1em;
+    }
+
+    .sidebar-actions {
+        margin-top: 0.75rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .notification-button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: var(--radius);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        background: rgba(102, 126, 234, 0.08);
+        color: var(--accent-purple);
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .notification-button:hover,
+    .notification-button:focus {
+        background: rgba(102, 126, 234, 0.16);
+        color: var(--accent-purple);
+        transform: translateY(-1px);
+    }
+
+    .notification-button .bi {
+        font-size: 1.1rem;
+    }
+
+    .notification-button .notification-label {
+        flex: 1;
+        color: var(--ink);
+        font-size: 0.85rem;
+    }
+
+    .notification-badge {
+        min-width: 22px;
+        height: 22px;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        background: var(--danger);
+        color: #fff;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
     }
 
     .sidebar-content {
@@ -675,6 +733,20 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         pointer-events: none;
     }
 
+    #sidebar.collapsed .sidebar-actions {
+        justify-content: center;
+    }
+
+    #sidebar.collapsed .notification-button {
+        padding: 0.45rem;
+        justify-content: center;
+    }
+
+    #sidebar.collapsed .notification-button .notification-label,
+    #sidebar.collapsed .notification-button .notification-badge {
+        display: none;
+    }
+
     #sidebar.collapsed .submenu-list {
         max-height: 0 !important;
         padding: 0;
@@ -780,6 +852,12 @@ $renderMenu = static function (array $menuItems, string $active, string $request
         }
         .sidebar .nav-group-title {
             font-size: 0.7rem;
+        }
+        .sidebar-actions {
+            flex-direction: column;
+        }
+        .notification-button {
+            width: 100%;
         }
     }
 
@@ -915,6 +993,15 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="sidebar-header">
         <span class="sidebar-logo">NEXA</span>
         <div class="sidebar-subtitle">Panel</div>
+        <div class="sidebar-actions">
+            <a class="notification-button" href="<?= htmlspecialchars($notificationsPath, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Bildirimler">
+                <i class="bi bi-bell" aria-hidden="true"></i>
+                <span class="notification-label">Bildirimler</span>
+                <?php if ($notificationDisplay !== ''): ?>
+                    <span class="notification-badge"><?= htmlspecialchars($notificationDisplay, ENT_QUOTES, 'UTF-8'); ?></span>
+                <?php endif; ?>
+            </a>
+        </div>
     </div>
     
     <div class="sidebar-content flex-grow-1">
@@ -986,6 +1073,15 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     <div class="offcanvas-body sidebar d-flex flex-column">
         <div class="flex-grow-1">
+            <div class="sidebar-actions mb-3">
+                <a class="notification-button" href="<?= htmlspecialchars($notificationsPath, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Bildirimler">
+                    <i class="bi bi-bell" aria-hidden="true"></i>
+                    <span class="notification-label">Bildirimler</span>
+                    <?php if ($notificationDisplay !== ''): ?>
+                        <span class="notification-badge"><?= htmlspecialchars($notificationDisplay, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
+                </a>
+            </div>
             <?php foreach ($menu as $groupTitle => $items): ?>
                 <div class="nav-group">
                     <div class="nav-group-title"><?= htmlspecialchars($groupTitle, ENT_QUOTES, 'UTF-8'); ?></div>
