@@ -116,6 +116,13 @@ function sessionHasAdminPrivileges(): bool
     return false;
 }
 
+function redirectWithFlash(string $type, string $message): void
+{
+    setFlashMessage($type, $message);
+    header('Location: admin.php');
+    exit;
+}
+
 if (!sessionHasAdminPrivileges()) {
     setFlashMessage('error', 'Yönetim paneline erişim yetkiniz bulunmuyor.');
     header('Location: dashboard.php');
@@ -123,6 +130,132 @@ if (!sessionHasAdminPrivileges()) {
 }
 
 $csrfToken = $_SESSION['csrf_token'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedToken = (string) ($_POST['csrf_token'] ?? '');
+
+    if ($postedToken === '' || !hash_equals($csrfToken, $postedToken)) {
+        redirectWithFlash('error', 'Geçersiz güvenlik doğrulaması. Lütfen formu yeniden gönderin.');
+    }
+
+    $action = (string) ($_POST['action'] ?? '');
+
+    switch ($action) {
+        case 'create_role':
+            $name = trim((string) ($_POST['role_name'] ?? ''));
+            $description = trim((string) ($_POST['role_description'] ?? ''));
+
+            if ($name === '') {
+                redirectWithFlash('error', 'Rol adı boş bırakılamaz.');
+            }
+
+            try {
+                $stmt = $pdo->prepare('INSERT INTO roles (name, description) VALUES (:name, :description)');
+                $stmt->execute([
+                    ':name' => $name,
+                    ':description' => $description !== '' ? $description : null,
+                ]);
+
+                redirectWithFlash('success', sprintf('"%s" rolü başarıyla oluşturuldu.', $name));
+            } catch (PDOException $e) {
+                $errorInfo = $e->errorInfo[1] ?? null;
+
+                if ($errorInfo === 1062) {
+                    redirectWithFlash('error', 'Bu ada sahip bir rol zaten mevcut. Lütfen farklı bir ad seçin.');
+                }
+
+                error_log('Admin panel role create failed: ' . $e->getMessage());
+                redirectWithFlash('error', 'Rol kaydedilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+            }
+
+            break;
+
+        case 'update_role':
+            $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$roleId) {
+                redirectWithFlash('error', 'Güncelleme için geçerli bir rol seçmelisiniz.');
+            }
+
+            try {
+                $currentStmt = $pdo->prepare('SELECT name, description FROM roles WHERE id = :id');
+                $currentStmt->execute([':id' => $roleId]);
+                $currentRole = $currentStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($currentRole === false) {
+                    redirectWithFlash('error', 'Seçtiğiniz rol bulunamadı.');
+                }
+
+                $name = trim((string) ($_POST['role_name'] ?? ''));
+                $description = trim((string) ($_POST['role_description'] ?? ''));
+
+                if ($name === '') {
+                    $name = (string) $currentRole['name'];
+                }
+
+                if ($description === '') {
+                    $description = (string) ($currentRole['description'] ?? '');
+                }
+
+                $updateStmt = $pdo->prepare('UPDATE roles SET name = :name, description = :description WHERE id = :id');
+                $updateStmt->execute([
+                    ':name' => $name,
+                    ':description' => $description !== '' ? $description : null,
+                    ':id' => $roleId,
+                ]);
+
+                if ($updateStmt->rowCount() === 0) {
+                    redirectWithFlash('success', 'Rol bilgilerinde değişiklik yapılmadı.');
+                }
+
+                redirectWithFlash('success', 'Rol bilgileri başarıyla güncellendi.');
+            } catch (PDOException $e) {
+                $errorInfo = $e->errorInfo[1] ?? null;
+
+                if ($errorInfo === 1062) {
+                    redirectWithFlash('error', 'Bu ada sahip başka bir rol bulunuyor. Lütfen farklı bir ad belirleyin.');
+                }
+
+                error_log('Admin panel role update failed: ' . $e->getMessage());
+                redirectWithFlash('error', 'Rol güncellenirken bir hata oluştu.');
+            }
+
+            break;
+
+        case 'delete_role':
+            $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$roleId) {
+                redirectWithFlash('error', 'Silme işlemi için geçerli bir rol seçmelisiniz.');
+            }
+
+            try {
+                $pdo->beginTransaction();
+                $deleteStmt = $pdo->prepare('DELETE FROM roles WHERE id = :id');
+                $deleteStmt->execute([':id' => $roleId]);
+
+                if ($deleteStmt->rowCount() === 0) {
+                    $pdo->rollBack();
+                    redirectWithFlash('error', 'Silmek istediğiniz rol bulunamadı.');
+                }
+
+                $pdo->commit();
+                redirectWithFlash('success', 'Rol başarıyla silindi.');
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                error_log('Admin panel role delete failed: ' . $e->getMessage());
+                redirectWithFlash('error', 'Rol silinirken bir hata oluştu.');
+            }
+
+            break;
+
+        default:
+            redirectWithFlash('error', 'Desteklenmeyen bir işlem istendi.');
+    }
+}
 
 $stats = [
     'users_total'        => 0,
@@ -596,6 +729,91 @@ function formatDate(?string $value): string
                                     </table>
                                 </div>
                             <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-header bg-white">
+                            <h2 class="h5 mb-0">Rol Yönetimi İşlemleri</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <h3 class="h6 text-uppercase text-muted mb-2">Rol Ekle</h3>
+                                    <form method="post" class="row g-2 align-items-end">
+                                        <input type="hidden" name="csrf_token" value="<?= esc($csrfToken); ?>">
+                                        <input type="hidden" name="action" value="create_role">
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small text-muted" for="role_name_create">Rol Adı</label>
+                                            <input type="text" name="role_name" id="role_name_create" class="form-control form-control-sm" placeholder="Örn. editor" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small text-muted" for="role_desc_create">Açıklama</label>
+                                            <input type="text" name="role_description" id="role_desc_create" class="form-control form-control-sm" placeholder="Rolün amacı (isteğe bağlı)">
+                                        </div>
+                                        <div class="col-12 col-md-2 d-grid">
+                                            <button type="submit" class="btn btn-sm btn-primary">Ekle</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-12">
+                                    <h3 class="h6 text-uppercase text-muted mb-2">Rol Güncelle</h3>
+                                    <?php if ($roleMatrix === []): ?>
+                                        <p class="text-muted small mb-0">Önce en az bir rol oluşturmalısınız.</p>
+                                    <?php else: ?>
+                                        <form method="post" class="row g-2 align-items-end">
+                                            <input type="hidden" name="csrf_token" value="<?= esc($csrfToken); ?>">
+                                            <input type="hidden" name="action" value="update_role">
+                                            <div class="col-12 col-md-4">
+                                                <label class="form-label small text-muted" for="role_id_update">Rol Seçin</label>
+                                                <select class="form-select form-select-sm" id="role_id_update" name="role_id" required>
+                                                    <option value="" selected disabled>Rol seçin</option>
+                                                    <?php foreach ($roleMatrix as $role): ?>
+                                                        <option value="<?= (int) $role['id']; ?>"><?= esc((string) ($role['name'] ?? 'Rol')); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <label class="form-label small text-muted" for="role_name_update">Yeni Rol Adı</label>
+                                                <input type="text" name="role_name" id="role_name_update" class="form-control form-control-sm" placeholder="Değiştirmek istemezseniz boş bırakın">
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <label class="form-label small text-muted" for="role_desc_update">Yeni Açıklama</label>
+                                                <input type="text" name="role_description" id="role_desc_update" class="form-control form-control-sm" placeholder="Boş bırakılabilir">
+                                            </div>
+                                            <div class="col-12 col-md-1 d-grid">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Kaydet</button>
+                                            </div>
+                                        </form>
+                                        <p class="text-muted small mb-0">Boş bıraktığınız alanlar mevcut değerler ile korunur.</p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-12">
+                                    <h3 class="h6 text-uppercase text-muted mb-2">Rol Sil</h3>
+                                    <?php if ($roleMatrix === []): ?>
+                                        <p class="text-muted small mb-0">Silinecek herhangi bir rol bulunmuyor.</p>
+                                    <?php else: ?>
+                                        <form method="post" class="row g-2 align-items-end">
+                                            <input type="hidden" name="csrf_token" value="<?= esc($csrfToken); ?>">
+                                            <input type="hidden" name="action" value="delete_role">
+                                            <div class="col-12 col-md-6">
+                                                <label class="form-label small text-muted" for="role_id_delete">Rol Seçin</label>
+                                                <select class="form-select form-select-sm" id="role_id_delete" name="role_id" required>
+                                                    <option value="" selected disabled>Rol seçin</option>
+                                                    <?php foreach ($roleMatrix as $role): ?>
+                                                        <option value="<?= (int) $role['id']; ?>"><?= esc((string) ($role['name'] ?? 'Rol')); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <span class="small text-muted">Silinen role bağlı izin ve atamalar da kaldırılacaktır.</span>
+                                            </div>
+                                            <div class="col-12 col-md-3 d-grid">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Seçilen rolü silmek istediğinize emin misiniz?');">Rolü Sil</button>
+                                            </div>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
