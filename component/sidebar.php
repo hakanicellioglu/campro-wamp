@@ -13,6 +13,26 @@ if (empty($_SESSION['csrf_token'])) {
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../assets/fonts/monoton.php';
 
+$companyName = 'şirket';
+$hasCompany  = false;
+$hasLogo     = file_exists(__DIR__ . '/../assets/images/company-logo.png');
+
+try {
+    $stmt = $pdo->prepare('SELECT id, name FROM companies ORDER BY id ASC LIMIT 1');
+    $stmt->execute();
+    $companyRow = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (is_array($companyRow)) {
+        $hasCompany = true;
+        $name = trim((string)($companyRow['name'] ?? ''));
+        if ($name !== '') {
+            $companyName = $name;
+        }
+    }
+} catch (Throwable $e) {
+    $hasCompany = false;
+    $companyName = 'şirket';
+}
+
 $active = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
@@ -256,17 +276,6 @@ $menuGroups = [
             ],
         ],
     ],
-    [
-        'title' => 'Kurumsal',
-        'items' => [
-            [
-                'label' => 'Şirket (company.cs)',
-                'icon'  => 'bi-building',
-                'href'  => '../public/company.php',
-                'match' => 'company.php',
-            ],
-        ],
-    ],
 ];
 
 if ($role === 'admin') {
@@ -507,6 +516,48 @@ $renderMenu = static function (array $menuGroups, string $active, string $reques
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.1em;
+    }
+
+    .company-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.35rem 0.5rem;
+        color: var(--ink);
+        font-size: 0.85rem;
+        background-color: var(--surface);
+        transition: var(--transition);
+    }
+
+    .company-chip:hover {
+        text-decoration: none;
+        background: var(--surface-hover);
+        color: var(--ink);
+    }
+
+    .company-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .company-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .sidebar-content {
@@ -1108,6 +1159,27 @@ document.addEventListener('DOMContentLoaded', function () {
         <span class="sidebar-logo">NEXA</span>
         <div class="sidebar-subtitle">Panel</div>
 
+        <div class="mt-2">
+          <a href="../public/company.php"
+             class="company-chip text-decoration-none w-100 justify-content-between position-relative"
+             aria-label="Şirket ayarları">
+            <span class="d-inline-flex align-items-center gap-2">
+              <?php if ($hasLogo): ?>
+                <img src="../assets/images/company-logo.png" class="company-logo" alt="<?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>">
+              <?php else: ?>
+                <i class="bi bi-building" aria-hidden="true"></i>
+              <?php endif; ?>
+              <span class="text-truncate" style="max-width: 140px;">
+                <?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>
+              </span>
+            </span>
+            <i class="bi bi-gear" aria-hidden="true"></i>
+            <?php if (!$hasCompany): ?>
+              <span class="company-badge" title="Şirket kurulumu gerekli">!</span>
+            <?php endif; ?>
+          </a>
+        </div>
+
         <!-- SAĞ ÜST AKSİYONLAR -->
         <div class="header-actions">
           <!-- Bildirim butonu -->
@@ -1208,6 +1280,26 @@ document.addEventListener('DOMContentLoaded', function () {
         <div>
             <span class="sidebar-logo">NEXA</span>
             <div class="sidebar-subtitle">Panel</div>
+            <div class="mt-2">
+              <a href="../public/company.php"
+                 class="company-chip text-decoration-none w-100 justify-content-between position-relative"
+                 aria-label="Şirket ayarları">
+                <span class="d-inline-flex align-items-center gap-2">
+                  <?php if ($hasLogo): ?>
+                    <img src="../assets/images/company-logo.png" class="company-logo" alt="<?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>">
+                  <?php else: ?>
+                    <i class="bi bi-building" aria-hidden="true"></i>
+                  <?php endif; ?>
+                  <span class="text-truncate" style="max-width: 140px;">
+                    <?= htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') ?>
+                  </span>
+                </span>
+                <i class="bi bi-gear" aria-hidden="true"></i>
+                <?php if (!$hasCompany): ?>
+                  <span class="company-badge" title="Şirket kurulumu gerekli">!</span>
+                <?php endif; ?>
+              </a>
+            </div>
         </div>
 
         <div class="d-inline-flex align-items-center gap-2">
