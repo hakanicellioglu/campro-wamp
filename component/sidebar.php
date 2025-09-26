@@ -88,6 +88,49 @@ $userUsername = $userUsername !== '' ? $userUsername : 'kullanici';
 $userFullname = $userFullname !== '' ? $userFullname : 'Kullanıcı';
 $userInitials = $userInitials !== '' ? $userInitials : 'K';
 
+// Bildirim özet bilgileri
+$notifCount = 0;
+$notifications = [];
+
+if ($userId > 0) {
+    try {
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = :id AND is_read = 0');
+        $countStmt->execute(['id' => $userId]);
+        $notifCount = (int) $countStmt->fetchColumn();
+
+        $listStmt = $pdo->prepare(
+            'SELECT title, message, created_at FROM notifications WHERE user_id = :id ORDER BY created_at DESC LIMIT 5'
+        );
+        $listStmt->execute(['id' => $userId]);
+        $notificationRows = $listStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($notificationRows as $row) {
+            $title = trim((string) ($row['title'] ?? ''));
+            $message = trim((string) ($row['message'] ?? ''));
+            $text = $title !== '' ? $title : ($message !== '' ? $message : 'Yeni bildirim');
+            $time = '';
+
+            if (!empty($row['created_at'])) {
+                try {
+                    $createdAt = new DateTimeImmutable($row['created_at']);
+                    $time = $createdAt->format('d.m.Y H:i');
+                } catch (Throwable $e) {
+                    $time = (string) $row['created_at'];
+                }
+            }
+
+            $notifications[] = [
+                'text' => $text,
+                'detail' => $title !== '' && $message !== '' ? $message : '',
+                'time' => $time,
+            ];
+        }
+    } catch (Throwable $e) {
+        $notifCount = 0;
+        $notifications = [];
+    }
+}
+
 $orderPath = file_exists(__DIR__ . '/../public/order.php') ? '../public/order.php' : '../public/orders.php';
 $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
@@ -784,6 +827,70 @@ $renderMenu = static function (array $menuItems, string $active, string $request
     }
 
     /* Scrollbars are hidden via the Claude Code compact sidebar spec */
+
+    /* Bildirim butonu */
+    .header-actions {
+        position: absolute;
+        right: .5rem;
+        top: .5rem;
+        display: inline-flex;
+        gap: .4rem;
+    }
+
+    .btn-icon {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--ink-lighter);
+        transition: var(--transition);
+    }
+
+    .btn-icon:hover {
+        background: var(--surface-hover);
+        color: var(--ink);
+        transform: translateY(-1px);
+    }
+
+    .badge-dot {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #ef4444;
+        box-shadow: 0 0 0 2px #fff;
+        display: none;
+    }
+
+    .btn-icon.has-unread .badge-dot {
+        display: block;
+    }
+
+    .dropdown-menu.notif-menu {
+        min-width: 280px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        padding: .35rem;
+    }
+
+    .notif-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: .9rem;
+    }
+
+    .notif-item small {
+        color: var(--ink-lighter);
+    }
+
 </style>
 
 <!-- Mobile Header -->
@@ -915,6 +1022,47 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="sidebar-header">
         <span class="sidebar-logo">NEXA</span>
         <div class="sidebar-subtitle">Panel</div>
+
+        <!-- SAĞ ÜST AKSİYONLAR -->
+        <div class="header-actions">
+          <!-- Bildirim butonu -->
+          <div class="dropdown">
+            <button class="btn-icon <?= ($notifCount>0?'has-unread':'') ?>" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Bildirimler">
+              <i class="bi bi-bell"></i>
+              <span class="badge-dot" aria-hidden="true"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end notif-menu">
+              <li class="px-2 py-1">
+                <strong>Bildirimler</strong>
+                <?php if ($notifCount>0): ?>
+                  <span class="badge text-bg-danger ms-2"><?= (int)$notifCount ?></span>
+                <?php endif; ?>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+
+              <?php if (!empty($notifications)): ?>
+                <?php foreach ($notifications as $n): ?>
+                  <li>
+                    <div class="dropdown-item notif-item">
+                      <span><?= htmlspecialchars($n['text'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+                      <?php if (!empty($n['detail'])): ?>
+                        <small class="text-muted"><?= htmlspecialchars($n['detail'], ENT_QUOTES, 'UTF-8') ?></small>
+                      <?php endif; ?>
+                      <?php if (!empty($n['time'])): ?>
+                        <small class="text-muted"><?= htmlspecialchars($n['time'], ENT_QUOTES, 'UTF-8') ?></small>
+                      <?php endif; ?>
+                    </div>
+                  </li>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <li><span class="dropdown-item text-muted">Yeni bildiriminiz yok</span></li>
+              <?php endif; ?>
+
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="../public/notifications.php">Tümünü görüntüle</a></li>
+            </ul>
+          </div>
+        </div>
     </div>
     
     <div class="sidebar-content flex-grow-1">
@@ -982,7 +1130,43 @@ document.addEventListener('DOMContentLoaded', function () {
             <span class="sidebar-logo">NEXA</span>
             <div class="sidebar-subtitle">Panel</div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
+
+        <div class="d-inline-flex align-items-center gap-2">
+            <!-- Bildirim butonu (mobil) -->
+            <div class="dropdown">
+              <button class="btn-icon <?= ($notifCount>0?'has-unread':'') ?>" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Bildirimler">
+                <i class="bi bi-bell"></i>
+                <span class="badge-dot" aria-hidden="true"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end notif-menu">
+                <!-- Aynı içerik -->
+                <li class="px-2 py-1">
+                  <strong>Bildirimler</strong>
+                  <?php if ($notifCount>0): ?>
+                    <span class="badge text-bg-danger ms-2"><?= (int)$notifCount ?></span>
+                  <?php endif; ?>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+        <?php if (!empty($notifications)): ?>
+          <?php foreach ($notifications as $n): ?>
+            <li>
+              <div class="dropdown-item notif-item">
+                <span><?= htmlspecialchars($n['text'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+                <?php if (!empty($n['detail'])): ?><small class="text-muted"><?= htmlspecialchars($n['detail'], ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
+                <?php if (!empty($n['time'])): ?><small class="text-muted"><?= htmlspecialchars($n['time'], ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        <?php else: ?>
+                  <li><span class="dropdown-item text-muted">Yeni bildiriminiz yok</span></li>
+                <?php endif; ?>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="../public/notifications.php">Tümünü görüntüle</a></li>
+              </ul>
+            </div>
+
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
+        </div>
     </div>
     <div class="offcanvas-body sidebar d-flex flex-column">
         <div class="flex-grow-1">
