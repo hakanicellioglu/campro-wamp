@@ -170,6 +170,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             break;
 
+        case 'assign_role':
+            $userId = filter_var($_POST['user_id'] ?? null, FILTER_VALIDATE_INT);
+            $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$userId || !$roleId) {
+                redirectWithFlash('error', 'Geçerli bir kullanıcı ve rol seçmelisiniz.');
+            }
+
+            try {
+                $pdo->beginTransaction();
+
+                $userStmt = $pdo->prepare('SELECT id, firstname, surname, username FROM users WHERE id = :id');
+                $userStmt->execute([':id' => $userId]);
+                $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($user === false) {
+                    $pdo->rollBack();
+                    redirectWithFlash('error', 'Seçilen kullanıcı bulunamadı.');
+                }
+
+                $roleStmt = $pdo->prepare('SELECT id, name FROM roles WHERE id = :id');
+                $roleStmt->execute([':id' => $roleId]);
+                $role = $roleStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($role === false) {
+                    $pdo->rollBack();
+                    redirectWithFlash('error', 'Seçilen rol bulunamadı.');
+                }
+
+                $existsStmt = $pdo->prepare('SELECT 1 FROM user_roles WHERE user_id = :user_id AND role_id = :role_id LIMIT 1');
+                $existsStmt->execute([
+                    ':user_id' => $userId,
+                    ':role_id' => $roleId,
+                ]);
+
+                if ($existsStmt->fetchColumn()) {
+                    $pdo->rollBack();
+                    redirectWithFlash('warning', 'Seçilen rol bu kullanıcıya zaten atanmış.');
+                }
+
+                $assignStmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)');
+                $assignStmt->execute([
+                    ':user_id' => $userId,
+                    ':role_id' => $roleId,
+                ]);
+
+                $pdo->commit();
+
+                $fullName = trim((string) ($user['firstname'] ?? '') . ' ' . (string) ($user['surname'] ?? ''));
+                if ($fullName === '') {
+                    $fullName = (string) ($user['username'] ?? 'Kullanıcı');
+                }
+
+                redirectWithFlash('success', sprintf('"%s" kullanıcısına "%s" rolü atandı.', $fullName, (string) $role['name']));
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                error_log('Admin panel role assign failed: ' . $e->getMessage());
+                redirectWithFlash('error', 'Rol atanırken bir hata oluştu.');
+            }
+
+            break;
+
         case 'update_role':
             $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
 
@@ -268,6 +333,7 @@ $stats = [
 $adminUsers = [];
 $roleMatrix = [];
 $usersWithoutRole = [];
+$assignableUsers = [];
 $recentNotifications = [];
 $criticalActions = [
     [
@@ -360,6 +426,16 @@ try {
 } catch (PDOException $e) {
     error_log('Admin panel users without role query failed: ' . $e->getMessage());
     $usersWithoutRole = [];
+}
+
+try {
+    $assignableStmt = $pdo->query(
+        'SELECT id, firstname, surname, username, email FROM users ORDER BY firstname, surname LIMIT 50'
+    );
+    $assignableUsers = $assignableStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} catch (PDOException $e) {
+    error_log('Admin panel assignable users query failed: ' . $e->getMessage());
+    $assignableUsers = [];
 }
 
 try {
@@ -834,6 +910,47 @@ function formatDate(?string $value): string
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white">
+                            <h2 class="h5 mb-0">Kullanıcıya Rol Ata</h2>
+                        </div>
+                        <div class="card-body">
+                            <?php if ($roleMatrix === []): ?>
+                                <p class="text-muted mb-0">Önce atanacak en az bir rol oluşturmalısınız.</p>
+                            <?php elseif ($assignableUsers === []): ?>
+                                <p class="text-muted mb-0">Atama yapılabilecek kullanıcı bulunamadı.</p>
+                            <?php else: ?>
+                                <form method="post" class="row g-2 align-items-end">
+                                    <input type="hidden" name="csrf_token" value="<?= esc($csrfToken); ?>">
+                                    <input type="hidden" name="action" value="assign_role">
+                                    <div class="col-12">
+                                        <label class="form-label small text-muted" for="assign_user_id">Kullanıcı</label>
+                                        <select class="form-select form-select-sm" id="assign_user_id" name="user_id" required>
+                                            <option value="" selected disabled>Kullanıcı seçin</option>
+                                            <?php foreach ($assignableUsers as $user): ?>
+                                                <option value="<?= (int) $user['id']; ?>">
+                                                    <?= esc(formatFullname($user)); ?> — <?= esc((string) ($user['email'] ?? '')); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small text-muted" for="assign_role_id">Rol</label>
+                                        <select class="form-select form-select-sm" id="assign_role_id" name="role_id" required>
+                                            <option value="" selected disabled>Rol seçin</option>
+                                            <?php foreach ($roleMatrix as $role): ?>
+                                                <option value="<?= (int) $role['id']; ?>"><?= esc((string) ($role['name'] ?? 'Rol')); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-4 col-lg-3 d-grid">
+                                        <button type="submit" class="btn btn-sm btn-success">Rol Ata</button>
+                                    </div>
+                                </form>
+                                <p class="text-muted small mb-0 mt-2">Kullanıcılara birden fazla rol atanabilir; aynı rol tekrar atanamaz.</p>
                             <?php endif; ?>
                         </div>
                     </div>
