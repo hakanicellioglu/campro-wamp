@@ -179,13 +179,35 @@ $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
 
 $vehicleExists = file_exists(__DIR__ . '/../public/vehicle.php');
+$shipmentsExists = file_exists(__DIR__ . '/../public/shipments.php');
+
 $vehicleHref = $vehicleExists ? '../public/vehicle.php' : '#';
 
+$vehicleChildren = [];
+if ($vehicleExists) {
+    $vehicleChildren[] = [
+        'label' => 'Planlanan Güzergah',
+        'href' => '../public/vehicle.php?view=routes',
+        'match' => 'vehicle.php',
+        'match_uri' => 'view=routes',
+    ];
+    $vehicleChildren[] = [
+        'label' => 'Bakım Takvimi',
+        'href' => '../public/vehicle.php?view=maintenance',
+        'match' => 'vehicle.php',
+        'match_uri' => 'view=maintenance',
+    ];
+}
+
 $shipmentFile = null;
-foreach (['shipment.php', 'shipments.php', 'sevkiyat.php'] as $candidate) {
-    if (file_exists(__DIR__ . '/../public/' . $candidate)) {
-        $shipmentFile = $candidate;
-        break;
+if ($shipmentsExists) {
+    $shipmentFile = 'shipments.php';
+} else {
+    foreach (['shipment.php', 'sevkiyat.php'] as $candidate) {
+        if (file_exists(__DIR__ . '/../public/' . $candidate)) {
+            $shipmentFile = $candidate;
+            break;
+        }
     }
 }
 
@@ -230,25 +252,14 @@ $menuGroups = [
                 'href'      => $vehicleHref,
                 'match'     => $vehicleExists ? 'vehicle.php' : '',
                 'match_uri' => $vehicleExists ? 'vehicle.php' : '',
-                'children'  => $vehicleExists ? [
-                    [
-                        'label' => 'Planlanan Güzergah',
-                        'href'  => '../public/vehicle.php?view=routes',
-                        'match_uri' => 'view=routes',
-                    ],
-                    [
-                        'label' => 'Bakım Takvimi',
-                        'href'  => '../public/vehicle.php?view=maintenance',
-                        'match_uri' => 'view=maintenance',
-                    ],
-                ] : [],
+                'children'  => $vehicleChildren,
             ],
             [
                 'label'     => 'Sevkiyatlar',
                 'icon'      => 'bi-box-arrow-up-right',
-                'href'      => $shipmentFile !== null ? '../public/' . $shipmentFile : ($vehicleExists ? '../public/vehicle.php?view=shipments' : '#'),
+                'href'      => $shipmentFile !== null ? '../public/' . $shipmentFile : '#',
                 'match'     => $shipmentFile !== null ? $shipmentFile : '',
-                'match_uri' => $shipmentFile !== null ? $shipmentFile : ($vehicleExists ? 'view=shipments' : ''),
+                'match_uri' => $shipmentFile !== null ? $shipmentFile : '',
             ],
             [
                 'label' => 'Projeler',
