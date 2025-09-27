@@ -444,10 +444,16 @@ if ($view === 'shipments') {
                                 <h1 class="h3 mb-1">Araç Yönetimi</h1>
                                 <p class="text-muted mb-0">Filonuzun durumunu izleyin, sevkiyat rotalarını planlayın ve bakım süreçlerini yönetin.</p>
                             </div>
-                            <a href="vehicle.php?view=maintenance" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                                <i class="bi bi-wrench"></i>
-                                Bakım Planla
-                            </a>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="vehicle.php?view=maintenance" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                                    <i class="bi bi-wrench"></i>
+                                    Bakım Planla
+                                </a>
+                                <a href="vehicle/add.php" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+                                    <i class="bi bi-plus-lg"></i>
+                                    Yeni Araç
+                                </a>
+                            </div>
                         </div>
                         <nav class="nav nav-pills nav-views mt-3">
                             <a class="nav-link <?= $view === 'overview' ? 'active' : ''; ?>" href="vehicle.php">Genel Bakış</a>
@@ -491,12 +497,18 @@ if ($view === 'shipments') {
                     <?php if ($view === 'overview'): ?>
                         <section class="card-shadow p-0 mb-4">
                             <div class="p-4 border-bottom">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                     <div>
                                         <h2 class="h5 mb-1">Araç Envanteri</h2>
                                         <p class="text-muted mb-0">Filonuzdaki tüm araçların güncel durumu</p>
                                     </div>
-                                    <span class="badge text-bg-light"><?= count($vehicleList); ?> kayıt</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge text-bg-light"><?= count($vehicleList); ?> kayıt</span>
+                                        <a href="vehicle/add.php" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2">
+                                            <i class="bi bi-plus-lg"></i>
+                                            Yeni Araç Ekle
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                             <div class="table-responsive">
@@ -510,12 +522,16 @@ if ($view === 'shipments') {
                                             <th>Durum</th>
                                             <th>Son Rota</th>
                                             <th>Bakım</th>
+                                            <th class="text-end">İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                     <?php if ($vehicleList === []): ?>
                                         <tr>
-                                            <td colspan="7" class="empty-state">Henüz araç kaydı bulunmuyor. Filonuzu oluşturmak için yeni kayıt ekleyin.</td>
+                                            <td colspan="8" class="empty-state">
+                                                Henüz araç kaydı bulunmuyor. Filonuzu oluşturmak için
+                                                <a class="link-primary" href="vehicle/add.php">yeni kayıt ekleyin</a>.
+                                            </td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($vehicleList as $vehicle): ?>
@@ -565,6 +581,12 @@ if ($view === 'shipments') {
                                                 </td>
                                                 <td><?= $lastRoute !== null ? e($lastRoute) : '<span class="text-muted">Veri yok</span>'; ?></td>
                                                 <td><?= $maintenanceText; ?></td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm" role="group" aria-label="Araç işlemleri">
+                                                        <a class="btn btn-outline-primary" href="vehicle/edit.php?id=<?= urlencode((string) $vehicle['id']); ?>">Düzenle</a>
+                                                        <a class="btn btn-outline-danger" href="vehicle/delete.php?id=<?= urlencode((string) $vehicle['id']); ?>">Sil</a>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
