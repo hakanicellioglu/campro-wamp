@@ -179,27 +179,23 @@ $orderMatch = basename($orderPath);
 $settingsPath = file_exists(__DIR__ . '/../public/settings.php') ? '../public/settings.php' : '#';
 
 $vehicleExists = file_exists(__DIR__ . '/../public/vehicle.php');
-$vehicleRoutesExists = file_exists(__DIR__ . '/../public/vehicle_routes.php');
-$vehicleMaintenanceExists = file_exists(__DIR__ . '/../public/vehicle_maintenance.php');
 $shipmentsExists = file_exists(__DIR__ . '/../public/shipments.php');
 
 $vehicleHref = $vehicleExists ? '../public/vehicle.php' : '#';
 
 $vehicleChildren = [];
-if ($vehicleRoutesExists) {
+if ($vehicleExists) {
     $vehicleChildren[] = [
         'label' => 'Planlanan Güzergah',
-        'href' => '../public/vehicle_routes.php',
-        'match' => 'vehicle_routes.php',
-        'match_uri' => 'vehicle_routes.php',
+        'href' => '../public/vehicle.php?view=routes',
+        'match' => 'vehicle.php',
+        'match_uri' => 'view=routes',
     ];
-}
-if ($vehicleMaintenanceExists) {
     $vehicleChildren[] = [
         'label' => 'Bakım Takvimi',
-        'href' => '../public/vehicle_maintenance.php',
-        'match' => 'vehicle_maintenance.php',
-        'match_uri' => 'vehicle_maintenance.php',
+        'href' => '../public/vehicle.php?view=maintenance',
+        'match' => 'vehicle.php',
+        'match_uri' => 'view=maintenance',
     ];
 }
 
