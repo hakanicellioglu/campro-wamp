@@ -52,6 +52,22 @@ CREATE TABLE vehicle_maintenance (
   CONSTRAINT fk_vehicle_maintenance_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE shipments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  shipment_code VARCHAR(60) NOT NULL UNIQUE,
+  ship_date DATE NOT NULL,
+  origin VARCHAR(150) NOT NULL,
+  destination VARCHAR(150) NOT NULL,
+  status ENUM('planned', 'in_transit', 'delayed', 'delivered', 'cancelled') NOT NULL DEFAULT 'planned',
+  cargo_description TEXT NULL,
+  vehicle_id INT NULL,
+  assigned_driver VARCHAR(120) NULL,
+  notes TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_shipments_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 -- Örnek veri ekleri
 INSERT INTO vehicles
   (plate_number, type, brand, model, production_year, capacity_weight, capacity_volume, status, last_service_at, next_service_at, inspection_expiry, insurance_expiry, notes)
@@ -71,3 +87,10 @@ INSERT INTO vehicle_maintenance
 VALUES
   (1, '2025-01-15', 'Periyodik Bakım', 'Yağ ve filtre değişimi yapıldı.', 58000, 12500.00, 'Yetkili Servis Kayseri', '2025-07-15', 'completed'),
   (2, '2025-02-25', 'Fren Kontrolü', 'Arka balatalar değiştirilecek.', 41000, NULL, 'Ford Servis Maslak', '2025-03-01', 'planned');
+
+INSERT INTO shipments
+  (shipment_code, ship_date, origin, destination, status, cargo_description, vehicle_id, assigned_driver, notes)
+VALUES
+  ('SHP-20250301-001', '2025-03-01', 'Kayseri Depo', 'Ankara Şantiye', 'in_transit', 'Isıcam paketleri sevkiyatı', 1, 'Mehmet Yılmaz', 'Sabah teslimatı için yola çıktı'),
+  ('SHP-20250302-002', '2025-03-02', 'İstanbul Depo', 'Bursa Proje', 'planned', 'Alüminyum profil', 2, 'Ayşe Demir', 'Yükleme saat 08:30 planlandı'),
+  ('SHP-20250301-003', '2025-03-01', 'İzmir Depo', 'Antalya Şube', 'delayed', 'PVC doğrama malzemesi', NULL, NULL, 'Araç arızası nedeniyle alternatif plan bekleniyor');
