@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Anamakine: 127.0.0.1:3306
--- Üretim Zamanı: 26 Eyl 2025, 12:00:55
+-- Üretim Zamanı: 27 Eyl 2025, 07:08:47
 -- Sunucu sürümü: 9.1.0
 -- PHP Sürümü: 8.3.14
 
@@ -114,7 +114,22 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `description` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+--
+-- Tablo döküm verisi `permissions`
+--
+
+INSERT INTO `permissions` (`id`, `name`, `description`) VALUES
+(1, 'view_dashboard', 'Gösterge panelini görüntüleme'),
+(2, 'view_reports', 'Raporları görüntüleme'),
+(3, 'manage_users', 'Kullanıcı ekleme/düzenleme/silme'),
+(4, 'manage_orders', 'Sipariş ekleme/düzenleme/silme'),
+(5, 'manage_products', 'Ürün ekleme/düzenleme/silme'),
+(6, 'manage_suppliers', 'Tedarikçi ekleme/düzenleme/silme'),
+(7, 'manage_prices', 'Fiyat kalemlerini yönetme'),
+(8, 'manage_shipments', 'Sevkiyat/araç planlama'),
+(9, 'manage_settings', 'Genel ayarları değiştirme');
 
 -- --------------------------------------------------------
 
@@ -129,7 +144,16 @@ CREATE TABLE IF NOT EXISTS `roles` (
   `description` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+--
+-- Tablo döküm verisi `roles`
+--
+
+INSERT INTO `roles` (`id`, `name`, `description`) VALUES
+(1, 'admin', 'Sistemde tüm yetkiler'),
+(2, 'manager', 'Sipariş/ürün yönetimi ve raporlar'),
+(3, 'user', 'Temel görüntüleme ve işlemler');
 
 -- --------------------------------------------------------
 
@@ -144,6 +168,55 @@ CREATE TABLE IF NOT EXISTS `role_permissions` (
   `granted` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`role_id`,`permission_id`),
   KEY `fk_rp_perm` (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+--
+-- Tablo döküm verisi `role_permissions`
+--
+
+INSERT INTO `role_permissions` (`role_id`, `permission_id`, `granted`) VALUES
+(1, 1, 1),
+(1, 2, 1),
+(1, 3, 1),
+(1, 4, 1),
+(1, 5, 1),
+(1, 6, 1),
+(1, 7, 1),
+(1, 8, 1),
+(1, 9, 1),
+(2, 1, 1),
+(2, 2, 1),
+(2, 4, 1),
+(2, 5, 1),
+(2, 6, 1),
+(2, 7, 1),
+(2, 8, 1),
+(3, 1, 1),
+(3, 2, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Tablo için tablo yapısı `shipments`
+--
+
+DROP TABLE IF EXISTS `shipments`;
+CREATE TABLE IF NOT EXISTS `shipments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `shipment_code` varchar(60) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `ship_date` date NOT NULL,
+  `origin` varchar(150) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `destination` varchar(150) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `status` enum('planned','in_transit','delayed','delivered','cancelled') COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'planned',
+  `cargo_description` text COLLATE utf8mb4_turkish_ci,
+  `vehicle_id` int DEFAULT NULL,
+  `assigned_driver` varchar(120) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_turkish_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `shipment_code` (`shipment_code`),
+  KEY `fk_shipments_vehicle` (`vehicle_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
 -- --------------------------------------------------------
@@ -188,6 +261,98 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
 --
+-- Tablo döküm verisi `user_roles`
+--
+
+INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
+(1, 1),
+(2, 1),
+(1, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Tablo için tablo yapısı `vehicles`
+--
+
+DROP TABLE IF EXISTS `vehicles`;
+CREATE TABLE IF NOT EXISTS `vehicles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `plate_number` varchar(20) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `type` varchar(60) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `brand` varchar(80) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `model` varchar(80) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `production_year` smallint DEFAULT NULL,
+  `capacity_weight` decimal(10,2) DEFAULT NULL,
+  `capacity_volume` decimal(10,2) DEFAULT NULL,
+  `status` enum('active','maintenance','passive','retired') COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'active',
+  `last_service_at` date DEFAULT NULL,
+  `next_service_at` date DEFAULT NULL,
+  `inspection_expiry` date DEFAULT NULL,
+  `insurance_expiry` date DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_turkish_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `plate_number` (`plate_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+--
+-- Tablo döküm verisi `vehicles`
+--
+
+INSERT INTO `vehicles` (`id`, `plate_number`, `type`, `brand`, `model`, `production_year`, `capacity_weight`, `capacity_volume`, `status`, `last_service_at`, `next_service_at`, `inspection_expiry`, `insurance_expiry`, `notes`, `created_at`, `updated_at`) VALUES
+(1, '38ANU835', 'Sedan', 'Fiat', 'Linea', 2014, 2000.00, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2025-09-27 10:08:10', '2025-09-27 10:08:10');
+
+-- --------------------------------------------------------
+
+--
+-- Tablo için tablo yapısı `vehicle_maintenance`
+--
+
+DROP TABLE IF EXISTS `vehicle_maintenance`;
+CREATE TABLE IF NOT EXISTS `vehicle_maintenance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int NOT NULL,
+  `maintenance_date` date NOT NULL,
+  `maintenance_type` varchar(120) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `description` text COLLATE utf8mb4_turkish_ci,
+  `mileage` int DEFAULT NULL,
+  `cost` decimal(12,2) DEFAULT NULL,
+  `service_center` varchar(150) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `next_due_date` date DEFAULT NULL,
+  `status` enum('planned','in_progress','completed') COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'planned',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_vehicle_maintenance_vehicle` (`vehicle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tablo için tablo yapısı `vehicle_routes`
+--
+
+DROP TABLE IF EXISTS `vehicle_routes`;
+CREATE TABLE IF NOT EXISTS `vehicle_routes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int NOT NULL,
+  `route_date` date NOT NULL,
+  `origin` varchar(120) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `destination` varchar(120) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `departure_time` time DEFAULT NULL,
+  `arrival_time` time DEFAULT NULL,
+  `cargo_summary` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `status` enum('planned','in_transit','completed','cancelled') COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'planned',
+  `notes` text COLLATE utf8mb4_turkish_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_vehicle_routes_vehicle` (`vehicle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+--
 -- Dökümü yapılmış tablolar için kısıtlamalar
 --
 
@@ -217,11 +382,29 @@ ALTER TABLE `role_permissions`
   ADD CONSTRAINT `fk_rp_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
 
 --
+-- Tablo kısıtlamaları `shipments`
+--
+ALTER TABLE `shipments`
+  ADD CONSTRAINT `fk_shipments_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL;
+
+--
 -- Tablo kısıtlamaları `user_roles`
 --
 ALTER TABLE `user_roles`
   ADD CONSTRAINT `fk_ur_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_ur_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Tablo kısıtlamaları `vehicle_maintenance`
+--
+ALTER TABLE `vehicle_maintenance`
+  ADD CONSTRAINT `fk_vehicle_maintenance_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE;
+
+--
+-- Tablo kısıtlamaları `vehicle_routes`
+--
+ALTER TABLE `vehicle_routes`
+  ADD CONSTRAINT `fk_vehicle_routes_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
